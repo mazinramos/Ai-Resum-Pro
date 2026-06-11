@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Builder Pro</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cairo:wght@400;600;700&family=Fira+Code&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Cairo', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                        serif: ['Playfair Display', 'serif']
+                    },
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#a855f7',
+                        dark: '#0a0a0b',
+                        darker: '#050505',
+                        card: 'rgba(255, 255, 255, 0.03)',
+                        cardHover: 'rgba(255, 255, 255, 0.05)',
+                        border: 'rgba(255, 255, 255, 0.1)',
+                    },
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        /* Base & Scrollbar */
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #111827;
+            --card-bg: #f3f4f6;
+            --border-color: #e5e7eb;
+        }
+        .dark {
+            --bg-color: #0a0a0b;
+            --text-color: #f9fafb;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            overflow-x: hidden;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+
+        /* Custom Cursor */
+        #cursor-glow {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass {
+            background: var(--card-bg);
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+        }
+        .glass-panel {
+            background: rgba(10, 10, 11, 0.7);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-color);
+        }
+        
+        html[dir="rtl"] .glass-panel {
+            border-right: none;
+            border-left: 1px solid var(--border-color);
+        }
+
+        /* Resume Preview Container (A4 Aspect Ratio) */
+        .a4-container {
+            width: 100%;
+            max-width: 800px;
+            aspect-ratio: 1 / 1.414;
+            background: white;
+            color: black;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            transform-origin: top center;
+        }
+
+        /* Input Styles */
+        .form-input {
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            color: inherit;
+            transition: all 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+        }
+
+        /* View Management */
+        .view-section { display: none; opacity: 0; }
+        .view-section.active { display: block; opacity: 1; }
+        .builder-view { display: none; }
+        .builder-view.active { display: flex; }
+
+        /* Loader */
+        .loader {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid #6366f1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Toast */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        html[dir="rtl"] #toast-container { right: auto; left: 20px; }
+        
+        .toast {
+            padding: 12px 24px;
+            border-radius: 8px;
+            background: #111827;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(100%);
+        }
+        html[dir="rtl"] .toast { transform: translateX(-100%); }
+
+        /* Template specific styles used in preview */
+        .tpl-modern .header { background: #111827; color: white; }
+        .tpl-minimal .header { border-bottom: 2px solid #e5e7eb; }
+        .tpl-executive { font-family: 'Playfair Display', serif; }
+        .tpl-developer { font-family: 'Fira Code', monospace; }
+        .tpl-creative .sidebar { background: #6366f1; color: white; }
+    </style>
+</head>
+<body class="antialiased min-h-screen relative font-sans">
+
+    <!-- Global Background Effects -->
+    <div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+        <div class="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div class="absolute top-0 -right-4 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div class="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+    </div>
+    <div id="cursor-glow"></div>
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 w-full z-50 glass border-b border-white/10 px-6 py-4 transition-all duration-300">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="UI.navigate('landing')">
+                <i class="ph-fill ph-magic-wand text-3xl text-indigo-500"></i>
+                <span class="font-bold text-xl tracking-tight">AI Resume<span class="text-indigo-500">Pro</span></span>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button onclick="UI.toggleLanguage()" class="p-2 rounded-full hover:bg-white/10 transition-colors" title="Toggle Language">
+                    <i class="ph ph-translate text-xl"></i>
+                </button>
+                <button onclick="UI.toggleTheme()" class="p-2 rounded-full hover:bg-white/10 transition-colors" title="Toggle Theme">
+                    <i class="ph ph-moon text-xl" id="theme-icon"></i>
+                </button>
+                
+                <div id="auth-nav-guest" class="flex gap-2">
+                    <button onclick="UI.showModal('login-modal')" class="px-4 py-2 rounded-lg font-medium hover:bg-white/5 transition-colors" data-i18n="login">Login</button>
+                    <button onclick="UI.showModal('signup-modal')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors shadow-lg shadow-indigo-500/20" data-i18n="signup">Sign Up</button>
+                </div>
+
+                <div id="auth-nav-user" class="hidden items-center gap-4">
+                    <button onclick="UI.navigate('dashboard')" class="text-sm font-medium hover:text-indigo-400 transition" data-i18n="dashboard">Dashboard</button>
+                    <div class="relative group cursor-pointer">
+                        <div class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/50">
+                            <i class="ph ph-user text-xl text-indigo-400"></i>
+                        </div>
+                        <div class="absolute right-0 mt-2 w-48 glass rounded-xl shadow-xl py-2 hidden group-hover:block border border-white/10">
+                            <div class="px-4 py-2 border-b border-white/10 text-sm truncate" id="user-email-display">user@example.com</div>
+                            <button onclick="UI.navigate('pricing')" class="w-full text-left px-4 py-2 hover:bg-white/5 text-sm flex items-center gap-2"><i class="ph ph-star text-yellow-400"></i> <span data-i18n="upgrade">Upgrade</span></button>
+                            <button onclick="Auth.logout()" class="w-full text-left px-4 py-2 hover:bg-white/5 text-sm text-red-400 flex items-center gap-2"><i class="ph ph-sign-out"></i> <span data-i18n="logout">Logout</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="pt-20 min-h-screen">
+
+        <!-- LANDING VIEW -->
+        <section id="view-landing" class="view-section active max-w-7xl mx-auto px-6 py-20 flex flex-col items-center justify-center min-h-[80vh] text-center">
+            <div class="inline-block px-4 py-1.5 rounded-full glass text-sm font-medium text-indigo-400 mb-6 border border-indigo-500/30">
+                ✨ <span data-i18n="badgeNew">Powered by Advanced AI</span>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-100 to-indigo-400">
+                <span data-i18n="heroTitle1">Land your dream job</span><br/>
+                <span data-i18n="heroTitle2">with an AI-crafted resume.</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-400 max-w-2xl mb-10" data-i18n="heroSub">
+                Build, edit, and export ATS-friendly resumes in minutes. Stand out from the crowd with beautiful templates and smart content suggestions.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button onclick="App.startBuilder()" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-[0_0_30px_rgba(99,102,241,0.4)] flex items-center justify-center gap-2">
+                    <span data-i18n="buildResumeBtn">Build Resume Now</span>
+                    <i class="ph ph-arrow-right"></i>
+                </button>
+                <button onclick="UI.navigate('pricing')" class="px-8 py-4 glass hover:bg-white/5 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                    <span data-i18n="viewPricing">View Pricing</span>
+                </button>
+            </div>
+            
+            <div class="mt-20 relative w-full max-w-4xl rounded-2xl overflow-hidden glass border border-white/20 shadow-2xl p-2">
+                <div class="bg-darker rounded-xl overflow-hidden aspect-video relative flex items-center justify-center">
+                    <i class="ph ph-play-circle text-6xl text-white/50 hover:text-white cursor-pointer transition"></i>
+                    <!-- Placeholder for app screenshot -->
+                    <div class="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-purple-500/10 pointer-events-none"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PRICING VIEW -->
+        <section id="view-pricing" class="view-section max-w-7xl mx-auto px-6 py-20">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4" data-i18n="pricingTitle">Simple, transparent pricing</h2>
+                <p class="text-gray-400" data-i18n="pricingSub">Invest in your career with our powerful tools.</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <!-- Free Plan -->
+                <div class="glass p-8 rounded-2xl border border-white/10 hover:border-indigo-500/50 transition-colors">
+                    <h3 class="text-2xl font-bold mb-2">Basic</h3>
+                    <div class="text-4xl font-bold mb-6">$0<span class="text-lg text-gray-400 font-normal">/mo</span></div>
+                    <ul class="space-y-4 mb-8 text-gray-300">
+                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-green-400"></i> Up to 3 Resumes</li>
+                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-green-400"></i> 2 Standard Templates</li>
+                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-green-400"></i> Basic PDF Export</li>
+                    </ul>
+                    <button onclick="UI.navigate('dashboard')" class="w-full py-3 rounded-lg glass hover:bg-white/10 font-bold transition">Current Plan</button>
+                </div>
+                <!-- Pro Plan -->
+                <div class="glass p-8 rounded-2xl border border-indigo-500 shadow-[0_0_30px_rgba(99,102,241,0.2)] relative">
+                    <div class="absolute top-0 right-0 bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-xl">POPULAR</div>
+                    <h3 class="text-2xl font-bold mb-2 flex items-center gap-2">Pro <i class="ph-fill ph-star text-yellow-400"></i></h3>
+                    <div class="text-4xl font-bold mb-6">$12<span class="text-lg text-gray-400 font-normal">/mo</span></div>
+                    <ul class="space-y-4 mb-8 text-gray-300">
+                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-indigo-400"></i> Unlimited Resumes</li>
+                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-indigo-400"></i> All Premium Templates</li>
+                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-indigo-400"></i> AI Content Generation</li>
+                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-indigo-400"></i> Advanced Customization</li>
+                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-indigo-400"></i> No Watermark PDF</li>
+                    </ul>
+                    <button onclick="UI.showToast('Payment gateway integration pending.', 'info')" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-bold transition shadow-lg shadow-indigo-500/20" data-i18n="upgradeNow">Upgrade Now</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- DASHBOARD VIEW -->
+        <section id="view-dashboard" class="view-section max-w-7xl mx-auto px-6 py-10">
+            <div class="flex justify-between items-center mb-10">
+                <div>
+                    <h2 class="text-3xl font-bold mb-2" data-i18n="myResumes">My Resumes</h2>
+                    <p class="text-gray-400" data-i18n="manageResumes">Manage and edit your saved resumes.</p>
+                </div>
+                <button onclick="App.createNewResume()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition shadow-lg shadow-indigo-500/20 flex items-center gap-2">
+                    <i class="ph ph-plus-circle text-xl"></i>
+                    <span data-i18n="createNew">Create New</span>
+                </button>
+            </div>
+            
+            <!-- Resumes Grid -->
+            <div id="resumes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Dynamically populated -->
+            </div>
+        </section>
+
+        <!-- BUILDER VIEW (Split Screen) -->
+        <section id="view-builder" class="view-section builder-view h-[calc(100vh-80px)] w-full overflow-hidden relative">
+            
+            <!-- Left Sidebar: Controls & Inputs -->
+            <div class="w-full md:w-[400px] lg:w-[500px] h-full flex flex-col glass-panel relative z-10 flex-shrink-0">
+                <!-- Builder Header -->
+                <div class="p-4 border-b border-white/10 flex justify-between items-center shrink-0 bg-darker/50">
+                    <input type="text" id="resume-title-input" class="bg-transparent border-none text-lg font-bold focus:outline-none focus:ring-1 ring-indigo-500 rounded px-2 py-1 w-2/3" value="Untitled Resume" onchange="Builder.updateMeta('title', this.value)">
+                    <div class="flex gap-2">
+                        <button onclick="UI.navigate('dashboard')" class="p-2 rounded hover:bg-white/10 transition" title="Back to Dashboard"><i class="ph ph-x"></i></button>
+                    </div>
+                </div>
+
+                <!-- Scrollable Form Area -->
+                <div class="flex-1 overflow-y-auto p-4 space-y-4 pb-24" id="builder-accordion">
+                    <!-- Sections will be injected here by JS -->
+                </div>
+
+                <!-- Builder Footer / Actions -->
+                <div class="absolute bottom-0 left-0 w-full p-4 border-t border-white/10 bg-darker/90 backdrop-blur shrink-0 flex justify-between gap-2">
+                    <button onclick="Builder.saveResume()" class="flex-1 py-2 bg-white/10 hover:bg-white/20 rounded-lg font-medium transition flex items-center justify-center gap-2">
+                        <i class="ph ph-floppy-disk"></i> <span data-i18n="save">Save</span>
+                    </button>
+                    <button onclick="Builder.exportPDF()" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition flex items-center justify-center gap-2">
+                        <i class="ph ph-download-simple"></i> <span data-i18n="download">Download</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Area: Live Preview -->
+            <div class="flex-1 bg-neutral-900/50 h-full overflow-y-auto relative hidden md:flex flex-col items-center py-8">
+                <!-- Toolbar for preview -->
+                <div class="glass rounded-full px-4 py-2 flex items-center gap-4 mb-6 sticky top-0 z-20">
+                    <span class="text-sm text-gray-400 font-medium" data-i18n="template">Template:</span>
+                    <select id="template-selector" class="bg-transparent text-white border-none text-sm focus:outline-none cursor-pointer" onchange="Builder.changeTemplate(this.value)">
+                        <option value="modern" class="bg-dark">Modern</option>
+                        <option value="minimal" class="bg-dark">Minimal</option>
+                        <option value="executive" class="bg-dark">Executive</option>
+                        <option value="developer" class="bg-dark">Developer</option>
+                        <option value="creative" class="bg-dark">Creative</option>
+                    </select>
+                    <div class="w-px h-4 bg-white/20"></div>
+                    <button onclick="Builder.shareResume()" class="text-sm hover:text-indigo-400 flex items-center gap-1 transition"><i class="ph ph-share-network"></i> Share</button>
+                </div>
+
+                <!-- Actual A4 Paper representation -->
+                <div id="preview-container" class="a4-container relative">
+                    <!-- Template content injected here -->
+                </div>
+                <!-- Extra padding for scrolling -->
+                <div class="h-20 shrink-0"></div>
+            </div>
+            
+            <!-- Mobile Preview Toggle -->
+            <button onclick="UI.toggleMobilePreview()" class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-indigo-600 rounded-full shadow-xl flex items-center justify-center text-white z-50">
+                <i class="ph ph-eye text-2xl" id="mobile-preview-icon"></i>
+            </button>
+            <div id="mobile-preview-panel" class="fixed inset-0 bg-dark z-40 flex-col overflow-y-auto pt-20 pb-10 items-center hidden">
+                <div id="mobile-preview-container" class="a4-container scale-90 origin-top"></div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Modals -->
+    <div id="modal-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity">
+        
+        <!-- Login Modal -->
+        <div id="login-modal" class="modal-content glass p-8 rounded-2xl w-full max-w-md hidden transform scale-95 transition-transform relative">
+            <button onclick="UI.hideModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="ph ph-x"></i></button>
+            <h3 class="text-2xl font-bold mb-6 text-center" data-i18n="login">Login</h3>
+            <div class="space-y-4">
+                <input type="email" id="login-email" class="form-input" placeholder="Email" data-i18n-placeholder="email">
+                <input type="password" id="login-password" class="form-input" placeholder="Password" data-i18n-placeholder="password">
+                <button onclick="Auth.loginWithEmail()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-bold transition">Login</button>
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-white/10"></div>
+                    <span class="flex-shrink-0 mx-4 text-gray-400 text-sm">Or</span>
+                    <div class="flex-grow border-t border-white/10"></div>
+                </div>
+                <button onclick="Auth.loginWithGoogle()" class="w-full py-3 glass hover:bg-white/10 rounded-lg font-bold transition flex items-center justify-center gap-2">
+                    <i class="ph-fill ph-google-logo"></i> Continue with Google
+                </button>
+            </div>
+        </div>
+
+        <!-- Signup Modal -->
+        <div id="signup-modal" class="modal-content glass p-8 rounded-2xl w-full max-w-md hidden transform scale-95 transition-transform relative">
+            <button onclick="UI.hideModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="ph ph-x"></i></button>
+            <h3 class="text-2xl font-bold mb-6 text-center" data-i18n="signup">Create Account</h3>
+            <div class="space-y-4">
+                <input type="email" id="signup-email" class="form-input" placeholder="Email">
+                <input type="password" id="signup-password" class="form-input" placeholder="Password">
+                <button onclick="Auth.signupWithEmail()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-bold transition">Sign Up</button>
+            </div>
+        </div>
+
+        <!-- Share Modal -->
+        <div id="share-modal" class="modal-content glass p-8 rounded-2xl w-full max-w-md hidden transform scale-95 transition-transform relative text-center">
+            <button onclick="UI.hideModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="ph ph-x"></i></button>
+            <h3 class="text-2xl font-bold mb-4">Share Resume</h3>
+            <p class="text-gray-400 text-sm mb-6">Anyone with this link can view your resume.</p>
+            <div class="flex gap-2 mb-6">
+                <input type="text" id="share-link-input" class="form-input text-sm" readonly value="https://airesume.pro/r/xyz123">
+                <button onclick="UI.copyShareLink()" class="px-4 bg-white/10 hover:bg-white/20 rounded-lg transition"><i class="ph ph-copy"></i></button>
+            </div>
+            <div class="flex justify-center gap-4">
+                <button class="p-3 rounded-full bg-[#25D366]/20 text-[#25D366] hover:bg-[#25D366]/30 transition"><i class="ph-fill ph-whatsapp-logo text-xl"></i></button>
+                <button class="p-3 rounded-full bg-[#0077b5]/20 text-[#0077b5] hover:bg-[#0077b5]/30 transition"><i class="ph-fill ph-linkedin-logo text-xl"></i></button>
+                <button class="p-3 rounded-full bg-black/20 text-white border border-white/10 hover:bg-white/10 transition"><i class="ph-fill ph-x-logo text-xl"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Firebase Imports & Script Configuration -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Setup Variables provided by environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ai-resume-builder-default';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { /* Mock config to prevent errors if running locally without setup */ };
+        
+        let app, db, auth;
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+        } catch(e) {
+            console.warn("Firebase initialization failed. Running in offline/mock mode.", e);
+        }
+
+        // --- STATE MANAGEMENT ---
+        const STATE = {
+            user: null,
+            lang: 'en',
+            theme: 'dark',
+            currentView: 'landing',
+            resumes: [], // List for dashboard
+            currentResume: null // Active building
+        };
+
+        // Default Resume Data Structure
+        const createEmptyResume = () => ({
+            id: 'res_' + Math.random().toString(36).substr(2, 9),
+            title: 'Untitled Resume',
+            template: 'modern',
+            updatedAt: new Date().toISOString(),
+            personal: { fullName: '', title: '', email: '', phone: '', location: '', website: '', linkedin: '', summary: '' },
+            experience: [],
+            education: [],
+            skills: { technical: '', soft: '' },
+            projects: []
+        });
+
+        // --- I18N DICTIONARY ---
+        const DICT = {
+            en: {
+                buildResumeBtn: "Build Resume Now",
+                login: "Login", signup: "Sign Up", logout: "Logout", dashboard: "Dashboard",
+                upgrade: "Upgrade", viewPricing: "View Pricing", pricingTitle: "Simple, transparent pricing",
+                myResumes: "My Resumes", createNew: "Create New", manageResumes: "Manage and edit your saved resumes.",
+                personalInfo: "Personal Information", experience: "Experience", education: "Education",
+                skills: "Skills", projects: "Projects",
+                fullName: "Full Name", jobTitle: "Job Title", summary: "Professional Summary",
+                addExperience: "Add Experience", addEducation: "Add Education", addProject: "Add Project",
+                save: "Save", download: "Download", template: "Template:", generateAI: "AI Gen", improveAI: "AI Enhance",
+                company: "Company", role: "Role", startDate: "Start Date", endDate: "End Date", current: "Current", description: "Description"
+            },
+            ar: {
+                buildResumeBtn: "أنشئ سيرتك الآن",
+                login: "دخول", signup: "تسجيل", logout: "خروج", dashboard: "لوحة التحكم",
+                upgrade: "ترقية", viewPricing: "الأسعار", pricingTitle: "أسعار بسيطة وواضحة",
+                myResumes: "سيرتي الذاتية", createNew: "إنشاء جديد", manageResumes: "إدارة وتعديل السير الذاتية.",
+                personalInfo: "المعلومات الشخصية", experience: "الخبرات العملية", education: "التعليم",
+                skills: "المهارات", projects: "المشاريع",
+                fullName: "الاسم الكامل", jobTitle: "المسمى الوظيفي", summary: "الملخص المهني",
+                addExperience: "إضافة خبرة", addEducation: "إضافة تعليم", addProject: "إضافة مشروع",
+                save: "حفظ", download: "تحميل", template: "القالب:", generateAI: "توليد بالذكاء", improveAI: "تحسين بالذكاء",
+                company: "الشركة", role: "الدور", startDate: "تاريخ البدء", endDate: "تاريخ الانتهاء", current: "الحالي", description: "الوصف"
+            }
+        };
+
+        // --- UTILS ---
+        const Utils = {
+            debounce: (func, wait) => {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => { clearTimeout(timeout); func(...args); };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            },
+            translate: (key) => DICT[STATE.lang][key] || key
+        };
+
+        // --- UI SERVICE ---
+        const UI = {
+            init: () => {
+                // Mouse Glow
+                document.addEventListener('mousemove', (e) => {
+                    const glow = document.getElementById('cursor-glow');
+                    gsap.to(glow, { x: e.clientX, y: e.clientY, duration: 0.1, ease: "power2.out" });
+                });
+
+                // Check local storage for theme/lang
+                const savedLang = localStorage.getItem('app_lang');
+                if(savedLang) UI.setLanguage(savedLang);
+                
+                // Initialize Translations
+                UI.updateTranslations();
+            },
+            
+            navigate: (viewId) => {
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                const target = document.getElementById(`view-${viewId}`);
+                if(target) {
+                    target.classList.add('active');
+                    STATE.currentView = viewId;
+                    
+                    // Simple Entrance Animation
+                    gsap.fromTo(target, {opacity: 0, y: 20}, {opacity: 1, y: 0, duration: 0.4, ease: "power2.out"});
+                }
+                if(viewId === 'dashboard') App.loadDashboard();
+            },
+
+            showModal: (id) => {
+                const overlay = document.getElementById('modal-overlay');
+                const modal = document.getElementById(id);
+                document.querySelectorAll('.modal-content').forEach(m => m.classList.add('hidden'));
+                overlay.classList.remove('hidden');
+                modal.classList.remove('hidden');
+                
+                // Animate in
+                gsap.to(overlay, {opacity: 1, duration: 0.2});
+                gsap.fromTo(modal, {scale: 0.95, opacity: 0}, {scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.7)"});
+            },
+
+            hideModal: () => {
+                const overlay = document.getElementById('modal-overlay');
+                gsap.to(overlay, {opacity: 0, duration: 0.2, onComplete: () => {
+                    overlay.classList.add('hidden');
+                }});
+            },
+
+            showToast: (msg, type = 'info') => {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                const icon = type === 'success' ? '<i class="ph-fill ph-check-circle text-green-400"></i>' : 
+                             type === 'error' ? '<i class="ph-fill ph-warning-circle text-red-400"></i>' : 
+                             '<i class="ph-fill ph-info text-blue-400"></i>';
+                toast.innerHTML = `${icon} <span>${msg}</span>`;
+                container.appendChild(toast);
+                
+                gsap.to(toast, {x: 0, duration: 0.3, ease: "power2.out"});
+                
+                setTimeout(() => {
+                    gsap.to(toast, {opacity: 0, y: -20, duration: 0.3, onComplete: () => toast.remove()});
+                }, 3000);
+            },
+
+            toggleTheme: () => {
+                const html = document.documentElement;
+                if(html.classList.contains('dark')) {
+                    html.classList.remove('dark');
+                    document.getElementById('theme-icon').className = 'ph ph-sun text-xl';
+                    STATE.theme = 'light';
+                } else {
+                    html.classList.add('dark');
+                    document.getElementById('theme-icon').className = 'ph ph-moon text-xl';
+                    STATE.theme = 'dark';
+                }
+            },
+
+            setLanguage: (lang) => {
+                STATE.lang = lang;
+                document.documentElement.lang = lang;
+                document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+                localStorage.setItem('app_lang', lang);
+                UI.updateTranslations();
+                if(STATE.currentResume) Builder.renderForm(); // Re-render form labels
+            },
+
+            toggleLanguage: () => {
+                UI.setLanguage(STATE.lang === 'en' ? 'ar' : 'en');
+            },
+
+            updateTranslations: () => {
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    if(DICT[STATE.lang][key]) el.innerHTML = DICT[STATE.lang][key];
+                });
+                document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                    const key = el.getAttribute('data-i18n-placeholder');
+                    if(DICT[STATE.lang][key]) el.placeholder = DICT[STATE.lang][key];
+                });
+            },
+            
+            updateAuthUI: (user) => {
+                const guestNav = document.getElementById('auth-nav-guest');
+                const userNav = document.getElementById('auth-nav-user');
+                if (user && !user.isAnonymous) {
+                    guestNav.classList.add('hidden');
+                    userNav.classList.remove('hidden');
+                    userNav.classList.add('flex');
+                    document.getElementById('user-email-display').textContent = user.email || 'User';
+                } else {
+                    guestNav.classList.remove('hidden');
+                    userNav.classList.add('hidden');
+                    userNav.classList.remove('flex');
+                }
+            },
+            
+            toggleMobilePreview: () => {
+                const panel = document.getElementById('mobile-preview-panel');
+                const icon = document.getElementById('mobile-preview-icon');
+                if(panel.classList.contains('hidden')) {
+                    panel.classList.remove('hidden');
+                    panel.classList.add('flex');
+                    icon.className = 'ph ph-x text-2xl';
+                    // Copy preview content
+                    document.getElementById('mobile-preview-container').innerHTML = document.getElementById('preview-container').innerHTML;
+                } else {
+                    panel.classList.add('hidden');
+                    panel.classList.remove('flex');
+                    icon.className = 'ph ph-eye text-2xl';
+                }
+            },
+            
+            copyShareLink: () => {
+                const input = document.getElementById('share-link-input');
+                input.select();
+                document.execCommand('copy');
+                UI.showToast("Link copied to clipboard!", "success");
+            }
+        };
+
+        // --- FIREBASE SERVICE ---
+        const Auth = {
+            init: async () => {
+                if(!auth) return;
+                
+                onAuthStateChanged(auth, (user) => {
+                    STATE.user = user;
+                    UI.updateAuthUI(user);
+                    if(user && STATE.currentView === 'landing') {
+                        // Optional auto-redirect
+                    }
+                });
+
+                // Check Custom Token from env
+                const initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                if (initialToken && !auth.currentUser) {
+                    try {
+                        await signInWithCustomToken(auth, initialToken);
+                    } catch(e) { console.error("Custom token auth failed", e); }
+                } else if (!auth.currentUser) {
+                    try {
+                        await signInAnonymously(auth);
+                    } catch(e) { console.error("Anon auth failed", e); }
+                }
+            },
+            
+            loginWithEmail: async () => {
+                const e = document.getElementById('login-email').value;
+                const p = document.getElementById('login-password').value;
+                if(!e || !p) return UI.showToast("Please enter email and password", "error");
+                try {
+                    await signInWithEmailAndPassword(auth, e, p);
+                    UI.hideModal();
+                    UI.showToast("Login successful", "success");
+                    UI.navigate('dashboard');
+                } catch(err) { UI.showToast(err.message, "error"); }
+            },
+            
+            signupWithEmail: async () => {
+                const e = document.getElementById('signup-email').value;
+                const p = document.getElementById('signup-password').value;
+                if(!e || !p) return UI.showToast("Please enter email and password", "error");
+                try {
+                    await createUserWithEmailAndPassword(auth, e, p);
+                    UI.hideModal();
+                    UI.showToast("Account created", "success");
+                    UI.navigate('dashboard');
+                } catch(err) { UI.showToast(err.message, "error"); }
+            },
+            
+            loginWithGoogle: async () => {
+                const provider = new GoogleAuthProvider();
+                try {
+                    await signInWithPopup(auth, provider);
+                    UI.hideModal();
+                    UI.showToast("Google login successful", "success");
+                    UI.navigate('dashboard');
+                } catch(err) { UI.showToast(err.message, "error"); }
+            },
+            
+            logout: async () => {
+                try {
+                    await signOut(auth);
+                    STATE.resumes = [];
+                    UI.navigate('landing');
+                    UI.showToast("Logged out", "info");
+                } catch(err) { console.error(err); }
+            }
+        };
+
+        const DB = {
+            getResumes: async () => {
+                if(!auth?.currentUser || auth.currentUser.isAnonymous) {
+                    // Fallback to local storage for guests
+                    const local = localStorage.getItem('local_resumes');
+                    return local ? JSON.parse(local) : [];
+                }
+                try {
+                    // MANDATORY RULE: Strict Path -> /artifacts/{appId}/users/{userId}/resumes
+                    const q = collection(db, 'artifacts', appId, 'users', auth.currentUser.uid, 'resumes');
+                    const snapshot = await getDocs(q);
+                    const resumes = [];
+                    snapshot.forEach(doc => resumes.push(doc.data()));
+                    return resumes.sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                } catch(e) { console.error("Fetch error", e); return []; }
+            },
+            
+            saveResume: async (resumeData) => {
+                resumeData.updatedAt = new Date().toISOString();
+                if(!auth?.currentUser || auth.currentUser.isAnonymous) {
+                    let local = JSON.parse(localStorage.getItem('local_resumes') || '[]');
+                    const idx = local.findIndex(r => r.id === resumeData.id);
+                    if(idx > -1) local[idx] = resumeData;
+                    else local.push(resumeData);
+                    localStorage.setItem('local_resumes', JSON.stringify(local));
+                    return true;
+                }
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'users', auth.currentUser.uid, 'resumes', resumeData.id);
+                    await setDoc(docRef, resumeData);
+                    return true;
+                } catch(e) { console.error("Save error", e); return false; }
+            },
+            
+            deleteResume: async (id) => {
+                if(!auth?.currentUser || auth.currentUser.isAnonymous) {
+                     let local = JSON.parse(localStorage.getItem('local_resumes') || '[]');
+                     local = local.filter(r => r.id !== id);
+                     localStorage.setItem('local_resumes', JSON.stringify(local));
+                     return true;
+                }
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'users', auth.currentUser.uid, 'resumes', id));
+                    return true;
+                } catch(e) { return false; }
+            }
+        };
+
+        // --- BUILDER SERVICE ---
+        const Builder = {
+            
+            // Core update method triggered by inputs
+            updateData: Utils.debounce((section, field, value, index = null) => {
+                if(!STATE.currentResume) return;
+                
+                if (index !== null) {
+                    STATE.currentResume[section][index][field] = value;
+                } else if (section === 'personal' || section === 'skills') {
+                    STATE.currentResume[section][field] = value;
+                } else {
+                    STATE.currentResume[field] = value;
+                }
+                
+                Builder.renderPreview();
+            }, 300),
+
+            updateMeta: (field, value) => {
+                if(STATE.currentResume) STATE.currentResume[field] = value;
+            },
+            
+            changeTemplate: (val) => {
+                if(STATE.currentResume) {
+                    STATE.currentResume.template = val;
+                    Builder.renderPreview();
+                }
+            },
+
+            // Form Rendering
+            renderForm: () => {
+                const container = document.getElementById('builder-accordion');
+                container.innerHTML = '';
+                
+                const sections = [
+                    { id: 'personal', icon: 'user', title: Utils.translate('personalInfo') },
+                    { id: 'summary', icon: 'text-align-left', title: Utils.translate('summary') },
+                    { id: 'experience', icon: 'briefcase', title: Utils.translate('experience') },
+                    { id: 'education', icon: 'graduation-cap', title: Utils.translate('education') },
+                    { id: 'skills', icon: 'lightning', title: Utils.translate('skills') }
+                ];
+
+                sections.forEach(s => {
+                    const sectionEl = document.createElement('div');
+                    sectionEl.className = 'glass rounded-xl overflow-hidden border border-white/10';
+                    
+                    // Header
+                    const header = document.createElement('div');
+                    header.className = 'p-4 flex items-center justify-between cursor-pointer hover:bg-white/5 transition';
+                    header.innerHTML = `
+                        <div class="flex items-center gap-3 font-semibold"><i class="ph ph-${s.icon} text-indigo-400 text-xl"></i> ${s.title}</div>
+                        <i class="ph ph-caret-down transform transition-transform" id="caret-${s.id}"></i>
+                    `;
+                    
+                    // Content Area
+                    const content = document.createElement('div');
+                    content.id = `content-${s.id}`;
+                    content.className = 'p-4 border-t border-white/10 bg-black/20 hidden space-y-4';
+                    
+                    // Generate specific form fields based on section
+                    content.innerHTML = Builder.getFormHTML(s.id);
+
+                    header.onclick = () => {
+                        const isHidden = content.classList.contains('hidden');
+                        // Close all others
+                        document.querySelectorAll('[id^="content-"]').forEach(el => el.classList.add('hidden'));
+                        document.querySelectorAll('[id^="caret-"]').forEach(el => el.style.transform = 'rotate(0deg)');
+                        
+                        if (isHidden) {
+                            content.classList.remove('hidden');
+                            document.getElementById(`caret-${s.id}`).style.transform = 'rotate(180deg)';
+                        }
+                    };
+
+                    sectionEl.appendChild(header);
+                    sectionEl.appendChild(content);
+                    container.appendChild(sectionEl);
+                });
+            },
+
+            getFormHTML: (type) => {
+                const data = STATE.currentResume;
+                const tr = Utils.translate;
+                
+                const inputTemplate = (label, section, field, val, placeholder="", type="text", aiBtn=false) => `
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1 pl-1">${label}</label>
+                        <div class="relative">
+                            ${type === 'textarea' 
+                                ? `<textarea class="form-input text-sm h-24" placeholder="${placeholder}" onkeyup="Builder.updateData('${section}', '${field}', this.value)">${val}</textarea>`
+                                : `<input type="${type}" class="form-input text-sm" placeholder="${placeholder}" value="${val}" onkeyup="Builder.updateData('${section}', '${field}', this.value)">`
+                            }
+                            ${aiBtn ? `<button onclick="AI.improveText(this, '${section}', '${field}')" class="absolute right-2 top-2 p-1.5 text-xs bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600/40 rounded flex items-center gap-1 transition" title="${tr('improveAI')}"><i class="ph-fill ph-magic-wand"></i></button>` : ''}
+                        </div>
+                    </div>
+                `;
+
+                if (type === 'personal') {
+                    return `
+                        <div class="grid grid-cols-2 gap-3">
+                            ${inputTemplate(tr('fullName'), 'personal', 'fullName', data.personal.fullName, 'John Doe')}
+                            ${inputTemplate(tr('jobTitle'), 'personal', 'title', data.personal.title, 'Software Engineer')}
+                            ${inputTemplate('Email', 'personal', 'email', data.personal.email, 'john@example.com', 'email')}
+                            ${inputTemplate('Phone', 'personal', 'phone', data.personal.phone, '+1 234 567 890')}
+                            ${inputTemplate('Location', 'personal', 'location', data.personal.location, 'New York, USA')}
+                            ${inputTemplate('LinkedIn / Website', 'personal', 'linkedin', data.personal.linkedin, 'linkedin.com/in/johndoe')}
+                        </div>
+                    `;
+                }
+                if (type === 'summary') {
+                    return `
+                        <div class="flex justify-end mb-2">
+                            <button onclick="AI.generateSummary()" class="text-xs flex items-center gap-1 text-indigo-400 hover:text-indigo-300"><i class="ph-fill ph-sparkle"></i> ${tr('generateAI')}</button>
+                        </div>
+                        ${inputTemplate('', 'personal', 'summary', data.personal.summary, 'Brief overview of your career...', 'textarea', true)}
+                    `;
+                }
+                if (type === 'experience') {
+                    let html = `<div id="exp-list" class="space-y-4">`;
+                    data.experience.forEach((exp, idx) => {
+                        html += Builder.getRepeaterItemHTML('experience', idx, exp);
+                    });
+                    html += `</div>
+                        <button onclick="Builder.addRepeaterItem('experience')" class="w-full py-2 border border-dashed border-white/20 rounded-lg text-sm text-gray-400 hover:bg-white/5 transition flex justify-center items-center gap-2 mt-4"><i class="ph ph-plus"></i> ${tr('addExperience')}</button>`;
+                    return html;
+                }
+                if (type === 'education') {
+                    let html = `<div id="edu-list" class="space-y-4">`;
+                    data.education.forEach((edu, idx) => {
+                        html += Builder.getRepeaterItemHTML('education', idx, edu);
+                    });
+                    html += `</div>
+                        <button onclick="Builder.addRepeaterItem('education')" class="w-full py-2 border border-dashed border-white/20 rounded-lg text-sm text-gray-400 hover:bg-white/5 transition flex justify-center items-center gap-2 mt-4"><i class="ph ph-plus"></i> ${tr('addEducation')}</button>`;
+                    return html;
+                }
+                if (type === 'skills') {
+                    return `
+                        ${inputTemplate('Technical Skills (comma separated)', 'skills', 'technical', data.skills.technical, 'JavaScript, React, Node.js', 'textarea')}
+                        <div class="h-2"></div>
+                        ${inputTemplate('Soft Skills (comma separated)', 'skills', 'soft', data.skills.soft, 'Leadership, Communication', 'textarea')}
+                    `;
+                }
+                return '';
+            },
+
+            getRepeaterItemHTML: (section, index, itemData) => {
+                const tr = Utils.translate;
+                if(section === 'experience') {
+                    return `
+                    <div class="p-3 bg-white/5 rounded-lg border border-white/5 relative group">
+                        <button onclick="Builder.removeRepeaterItem('${section}', ${index})" class="absolute top-2 right-2 text-red-400 opacity-0 group-hover:opacity-100 transition p-1"><i class="ph ph-trash"></i></button>
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <div>
+                                <label class="block text-[10px] text-gray-400">${tr('company')}</label>
+                                <input type="text" class="w-full bg-transparent border-b border-white/20 text-sm py-1 focus:outline-none focus:border-indigo-500" value="${itemData.company || ''}" onchange="Builder.updateData('${section}', 'company', this.value, ${index})">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-400">${tr('role')}</label>
+                                <input type="text" class="w-full bg-transparent border-b border-white/20 text-sm py-1 focus:outline-none focus:border-indigo-500" value="${itemData.role || ''}" onchange="Builder.updateData('${section}', 'role', this.value, ${index})">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-400">${tr('startDate')}</label>
+                                <input type="text" placeholder="MM/YYYY" class="w-full bg-transparent border-b border-white/20 text-sm py-1 focus:outline-none focus:border-indigo-500" value="${itemData.startDate || ''}" onchange="Builder.updateData('${section}', 'startDate', this.value, ${index})">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-400">${tr('endDate')}</label>
+                                <input type="text" placeholder="MM/YYYY or Present" class="w-full bg-transparent border-b border-white/20 text-sm py-1 focus:outline-none focus:border-indigo-500" value="${itemData.endDate || ''}" onchange="Builder.updateData('${section}', 'endDate', this.value, ${index})">
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <label class="block text-[10px] text-gray-400">${tr('description')}</label>
+                            <textarea class="w-full bg-black/20 rounded p-2 text-xs h-20 border border-white/10 focus:border-indigo-500 outline-none" onchange="Builder.updateData('${section}', 'description', this.value, ${index})">${itemData.description || ''}</textarea>
+                            <button onclick="AI.improveText(this, '${section}', 'description', ${index})" class="absolute right-2 top-6 p-1 text-[10px] bg-indigo-600/20 text-indigo-400 rounded"><i class="ph-fill ph-magic-wand"></i></button>
+                        </div>
+                    </div>`;
+                }
+                if(section === 'education') {
+                    return `
+                    <div class="p-3 bg-white/5 rounded-lg border border-white/5 relative group">
+                        <button onclick="Builder.removeRepeaterItem('${section}', ${index})" class="absolute top-2 right-2 text-red-400 opacity-0 group-hover:opacity-100 transition p-1"><i class="ph ph-trash"></i></button>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] text-gray-400">Institution</label>
+                                <input type="text" class="w-full bg-transparent border-b border-white/20 text-sm py-1 focus:outline-none focus:border-indigo-500" value="${itemData.institution || ''}" onchange="Builder.updateData('${section}', 'institution', this.value, ${index})">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-400">Degree/Major</label>
+                                <input type="text" class="w-full bg-transparent border-b border-white/20 text-sm py-1 focus:outline-none focus:border-indigo-500" value="${itemData.degree || ''}" onchange="Builder.updateData('${section}', 'degree', this.value, ${index})">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-400">Year</label>
+                                <input type="text" class="w-full bg-transparent border-b border-white/20 text-sm py-1 focus:outline-none focus:border-indigo-500" value="${itemData.year || ''}" onchange="Builder.updateData('${section}', 'year', this.value, ${index})">
+                            </div>
+                        </div>
+                    </div>`;
+                }
+            },
+
+            addRepeaterItem: (section) => {
+                if(!STATE.currentResume) return;
+                const newItem = section === 'experience' ? { company: '', role: '', startDate: '', endDate: '', description: '' } 
+                              : { institution: '', degree: '', year: '' };
+                STATE.currentResume[section].push(newItem);
+                Builder.renderForm(); // Re-render to show new item
+                Builder.renderPreview();
+                // keep section open
+                setTimeout(()=> { document.getElementById(`content-${section}`).classList.remove('hidden'); document.getElementById(`caret-${section}`).style.transform = 'rotate(180deg)';}, 50);
+            },
+            
+            removeRepeaterItem: (section, index) => {
+                if(!STATE.currentResume) return;
+                STATE.currentResume[section].splice(index, 1);
+                Builder.renderForm();
+                Builder.renderPreview();
+                 setTimeout(()=> { document.getElementById(`content-${section}`).classList.remove('hidden'); document.getElementById(`caret-${section}`).style.transform = 'rotate(180deg)';}, 50);
+            },
+
+            renderPreview: () => {
+                const container = document.getElementById('preview-container');
+                if(!STATE.currentResume || !container) return;
+                
+                const data = STATE.currentResume;
+                const isRTL = STATE.lang === 'ar';
+                container.dir = isRTL ? 'rtl' : 'ltr';
+                container.className = `a4-container relative tpl-${data.template}`;
+                
+                // Set typography based on language
+                container.style.fontFamily = isRTL ? "'Cairo', sans-serif" : "'Inter', sans-serif";
+
+                let html = '';
+
+                // --- TEMPLATE LOGIC ---
+                
+                const parseSkills = (str) => str ? str.split(',').map(s => s.trim()).filter(s => s) : [];
+
+                if (data.template === 'modern') {
+                    // Modern: Sidebar Left/Right, clean header
+                    const techSkills = parseSkills(data.skills.technical);
+                    html = `
+                    <div class="flex h-full w-full">
+                        <div class="w-1/3 bg-gray-100 p-6 flex flex-col border-r border-gray-200">
+                            <h1 class="text-2xl font-bold text-gray-800 leading-tight">${data.personal.fullName || 'Your Name'}</h1>
+                            <h2 class="text-indigo-600 font-medium mb-6 mt-1">${data.personal.title || 'Professional Title'}</h2>
+                            
+                            <div class="space-y-3 text-xs text-gray-600 mb-8">
+                                ${data.personal.email ? `<div class="flex items-center gap-2"><i class="ph-fill ph-envelope"></i> ${data.personal.email}</div>` : ''}
+                                ${data.personal.phone ? `<div class="flex items-center gap-2"><i class="ph-fill ph-phone"></i> ${data.personal.phone}</div>` : ''}
+                                ${data.personal.location ? `<div class="flex items-center gap-2"><i class="ph-fill ph-map-pin"></i> ${data.personal.location}</div>` : ''}
+                                ${data.personal.linkedin ? `<div class="flex items-center gap-2"><i class="ph-fill ph-link"></i> ${data.personal.linkedin}</div>` : ''}
+                            </div>
+
+                            ${techSkills.length > 0 ? `
+                                <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-3 border-b border-gray-300 pb-1">Skills</h3>
+                                <div class="flex flex-wrap gap-1">
+                                    ${techSkills.map(s => `<span class="bg-indigo-100 text-indigo-800 text-[10px] px-2 py-1 rounded">${s}</span>`).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="w-2/3 p-8 flex flex-col">
+                            ${data.personal.summary ? `
+                                <div class="mb-6">
+                                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-2 border-b border-gray-200 pb-1">Profile</h3>
+                                    <p class="text-xs text-gray-600 leading-relaxed">${data.personal.summary}</p>
+                                </div>
+                            ` : ''}
+
+                            ${data.experience.length > 0 ? `
+                                <div class="mb-6">
+                                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 border-b border-gray-200 pb-1">Experience</h3>
+                                    <div class="space-y-4">
+                                        ${data.experience.map(exp => `
+                                            <div>
+                                                <div class="flex justify-between items-baseline mb-1">
+                                                    <h4 class="text-sm font-semibold text-gray-800">${exp.role || 'Role'}</h4>
+                                                    <span class="text-[10px] text-gray-500">${exp.startDate || ''} - ${exp.endDate || ''}</span>
+                                                </div>
+                                                <div class="text-xs text-indigo-600 font-medium mb-1">${exp.company || 'Company'}</div>
+                                                <p class="text-[11px] text-gray-600 leading-relaxed whitespace-pre-line">${exp.description || ''}</p>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            ${data.education.length > 0 ? `
+                                <div>
+                                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-3 border-b border-gray-200 pb-1">Education</h3>
+                                    <div class="space-y-3">
+                                        ${data.education.map(edu => `
+                                            <div class="flex justify-between items-baseline">
+                                                <div>
+                                                    <h4 class="text-xs font-semibold text-gray-800">${edu.degree || 'Degree'}</h4>
+                                                    <div class="text-[11px] text-gray-600">${edu.institution || 'Institution'}</div>
+                                                </div>
+                                                <span class="text-[10px] text-gray-500">${edu.year || ''}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    `;
+                } else if (data.template === 'minimal') {
+                    // Minimal: Centered header, clean dividers
+                     html = `
+                    <div class="p-10 w-full h-full flex flex-col bg-white">
+                        <div class="text-center mb-8">
+                            <h1 class="text-3xl font-light text-gray-900 tracking-wide uppercase">${data.personal.fullName || 'Your Name'}</h1>
+                            <h2 class="text-sm text-gray-500 mt-2 tracking-widest uppercase">${data.personal.title || 'Professional Title'}</h2>
+                            <div class="flex justify-center gap-4 mt-3 text-[10px] text-gray-500">
+                                ${data.personal.email ? `<span>${data.personal.email}</span>` : ''}
+                                ${data.personal.phone ? `<span>• ${data.personal.phone}</span>` : ''}
+                                ${data.personal.location ? `<span>• ${data.personal.location}</span>` : ''}
+                            </div>
+                        </div>
+
+                        ${data.personal.summary ? `
+                            <div class="mb-6">
+                                <p class="text-xs text-gray-700 leading-loose text-center max-w-2xl mx-auto">${data.personal.summary}</p>
+                            </div>
+                        ` : ''}
+
+                        ${data.experience.length > 0 ? `
+                            <div class="mb-6">
+                                <h3 class="text-xs font-bold text-gray-900 uppercase tracking-widest mb-4 border-b border-black pb-2">Experience</h3>
+                                <div class="space-y-5">
+                                    ${data.experience.map(exp => `
+                                        <div>
+                                            <div class="flex justify-between items-baseline mb-1">
+                                                <h4 class="text-sm font-semibold text-gray-900">${exp.company || 'Company'} <span class="text-gray-400 font-normal">| ${exp.role || 'Role'}</span></h4>
+                                                <span class="text-[10px] text-gray-500">${exp.startDate || ''} - ${exp.endDate || ''}</span>
+                                            </div>
+                                            <p class="text-[11px] text-gray-600 leading-relaxed whitespace-pre-line mt-2 pl-4 border-l border-gray-200">${exp.description || ''}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                         ${parseSkills(data.skills.technical).length > 0 ? `
+                            <div class="mb-6">
+                                <h3 class="text-xs font-bold text-gray-900 uppercase tracking-widest mb-3 border-b border-black pb-2">Skills</h3>
+                                <p class="text-xs text-gray-700">${parseSkills(data.skills.technical).join(' • ')}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                    `;
+                } else if (data.template === 'executive') {
+                     // Executive: Serif fonts, formal
+                     html = `
+                    <div class="p-10 w-full h-full flex flex-col bg-[#faf9f6]">
+                        <div class="border-b-2 border-[#2c3e50] pb-4 mb-6 text-center">
+                            <h1 class="text-4xl font-serif font-bold text-[#2c3e50] mb-1">${data.personal.fullName || 'Your Name'}</h1>
+                            <h2 class="text-md font-serif text-[#7f8c8d] italic">${data.personal.title || 'Professional Title'}</h2>
+                            <div class="flex justify-center gap-3 mt-2 text-xs text-[#34495e] font-sans">
+                                <span>${data.personal.email || ''}</span> | <span>${data.personal.phone || ''}</span> | <span>${data.personal.location || ''}</span>
+                            </div>
+                        </div>
+
+                        ${data.personal.summary ? `
+                            <div class="mb-6">
+                                <h3 class="text-sm font-bold text-[#2c3e50] uppercase tracking-wider mb-2 font-sans">Executive Summary</h3>
+                                <p class="text-xs text-[#444] leading-relaxed font-serif text-justify">${data.personal.summary}</p>
+                            </div>
+                        ` : ''}
+
+                        ${data.experience.length > 0 ? `
+                            <div class="mb-6">
+                                <h3 class="text-sm font-bold text-[#2c3e50] uppercase tracking-wider mb-3 font-sans border-b border-[#bdc3c7]">Professional Experience</h3>
+                                <div class="space-y-4">
+                                    ${data.experience.map(exp => `
+                                        <div>
+                                            <div class="flex justify-between font-sans">
+                                                <h4 class="text-sm font-bold text-[#2c3e50]">${exp.company || 'Company'}</h4>
+                                                <span class="text-xs font-semibold text-[#2c3e50]">${exp.startDate || ''} – ${exp.endDate || ''}</span>
+                                            </div>
+                                            <div class="text-xs text-[#7f8c8d] font-sans italic mb-1">${exp.role || 'Role'}</div>
+                                            <p class="text-xs text-[#444] leading-relaxed font-serif">${exp.description || ''}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                    `;
+                } else {
+                    // Fallback Developer style (monospaced accents)
+                     const techSkills = parseSkills(data.skills.technical);
+                     html = `
+                    <div class="p-8 w-full h-full flex flex-col bg-white text-gray-800">
+                        <div class="mb-8">
+                            <h1 class="text-3xl font-mono font-bold text-blue-600 mb-2">> ${data.personal.fullName || 'Your_Name'}</h1>
+                            <div class="flex gap-4 text-xs font-mono text-gray-500 mb-4">
+                                <span>${data.personal.email || 'email@.com'}</span>
+                                <span>${data.personal.linkedin || 'github.com/username'}</span>
+                            </div>
+                            <p class="text-xs leading-relaxed border-l-2 border-blue-200 pl-3">${data.personal.summary || '...'}</p>
+                        </div>
+
+                         ${techSkills.length > 0 ? `
+                            <div class="mb-6">
+                                <h3 class="text-sm font-mono font-bold text-gray-800 mb-2">// Skills</h3>
+                                <div class="flex flex-wrap gap-2">
+                                    ${techSkills.map(s => `<span class="border border-gray-300 text-gray-600 text-[10px] px-2 py-0.5 rounded-sm font-mono">${s}</span>`).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        ${data.experience.length > 0 ? `
+                            <div class="mb-6">
+                                <h3 class="text-sm font-mono font-bold text-gray-800 mb-3">// Experience</h3>
+                                <div class="space-y-4">
+                                    ${data.experience.map(exp => `
+                                        <div>
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <h4 class="text-sm font-bold text-gray-800">${exp.role || 'Role'}</h4>
+                                                <span class="text-[10px] text-gray-400 font-mono">@ ${exp.company || 'Company'}</span>
+                                            </div>
+                                            <div class="text-[10px] text-blue-500 font-mono mb-2">[${exp.startDate || ''} - ${exp.endDate || ''}]</div>
+                                            <p class="text-xs text-gray-600 leading-relaxed pl-2 border-l border-gray-100">${exp.description || ''}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                    `;
+                }
+
+                container.innerHTML = html;
+            },
+
+            saveResume: async () => {
+                if(!STATE.currentResume) return;
+                const btn = event.currentTarget;
+                btn.innerHTML = '<div class="loader mx-auto"></div>';
+                
+                const success = await DB.saveResume(STATE.currentResume);
+                
+                setTimeout(() => {
+                    btn.innerHTML = `<i class="ph ph-floppy-disk"></i> <span>${Utils.translate('save')}</span>`;
+                    if(success) UI.showToast("Resume saved successfully!", "success");
+                    else UI.showToast("Failed to save resume.", "error");
+                }, 500);
+            },
+
+            exportPDF: () => {
+                const element = document.getElementById('preview-container');
+                const opt = {
+                    margin:       0,
+                    filename:     `${STATE.currentResume.title.replace(/\s+/g, '_')}.pdf`,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                
+                UI.showToast("Generating PDF... Please wait.", "info");
+                html2pdf().set(opt).from(element).save().then(()=> {
+                    UI.showToast("PDF Downloaded!", "success");
+                });
+            },
+            
+            shareResume: () => {
+                const url = `https://airesume.pro/r/${STATE.currentResume.id}`;
+                document.getElementById('share-link-input').value = url;
+                UI.showModal('share-modal');
+            }
+        };
+
+        // --- AI SIMULATION ---
+        const AI = {
+            generateSummary: () => {
+                if(!STATE.currentResume) return;
+                const role = STATE.currentResume.personal.title || 'Professional';
+                const input = document.querySelector('textarea[onkeyup*="summary"]');
+                if(!input) return;
+                
+                const btn = event.currentTarget;
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Generating...';
+                
+                setTimeout(() => {
+                    const prompt = `Highly motivated and detail-oriented ${role} with a proven track record of delivering high-quality results. Adept at collaborating with cross-functional teams to drive project success and implement innovative solutions. Strong problem-solving skills and a passion for continuous learning in dynamic environments.`;
+                    input.value = prompt;
+                    Builder.updateData('personal', 'summary', prompt);
+                    btn.innerHTML = originalHtml;
+                    UI.showToast("Summary generated by AI", "success");
+                }, 1500);
+            },
+
+            improveText: (btnElement, section, field, index = null) => {
+                let inputElement = btnElement.previousElementSibling;
+                if(!inputElement || !inputElement.value) {
+                    return UI.showToast("Please enter some text first", "info");
+                }
+                
+                const originalHtml = btnElement.innerHTML;
+                btnElement.innerHTML = '<i class="ph ph-spinner animate-spin"></i>';
+                
+                setTimeout(() => {
+                    // Simple mock improvement by adding strong action verbs
+                    let text = inputElement.value;
+                    if(text.length < 10) text = "Spearheaded initiatives to " + text;
+                    else text = text.replace(/Did /g, "Orchestrated ").replace(/Made /g, "Engineered ");
+                    
+                    if(!text.endsWith('.')) text += '.';
+                    
+                    inputElement.value = text;
+                    Builder.updateData(section, field, text, index);
+                    
+                    btnElement.innerHTML = originalHtml;
+                    UI.showToast("Text enhanced by AI", "success");
+                }, 1000);
+            }
+        };
+
+        // --- APP CONTROLLER ---
+        const App = {
+            init: async () => {
+                UI.init();
+                await Auth.init();
+                
+                // Route based on hash or default
+                UI.navigate('landing');
+            },
+
+            loadDashboard: async () => {
+                const grid = document.getElementById('resumes-grid');
+                grid.innerHTML = '<div class="col-span-full flex justify-center py-10"><div class="loader border-indigo-500"></div></div>';
+                
+                STATE.resumes = await DB.getResumes();
+                
+                if (STATE.resumes.length === 0) {
+                    grid.innerHTML = `
+                        <div class="col-span-full glass p-10 rounded-2xl text-center border border-white/10 flex flex-col items-center">
+                            <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4">
+                                <i class="ph ph-file-dashed text-4xl text-gray-500"></i>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">No resumes yet</h3>
+                            <p class="text-gray-400 mb-6 max-w-sm">Create your first AI-powered resume and start landing interviews.</p>
+                            <button onclick="App.createNewResume()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition shadow-lg shadow-indigo-500/20">Create Resume</button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                grid.innerHTML = '';
+                STATE.resumes.forEach(resume => {
+                    const date = new Date(resume.updatedAt).toLocaleDateString(STATE.lang === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                    const card = document.createElement('div');
+                    card.className = 'glass rounded-xl p-5 border border-white/10 hover:border-indigo-500/50 transition-all transform hover:-translate-y-1 group relative cursor-pointer';
+                    card.innerHTML = `
+                        <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                            <button onclick="event.stopPropagation(); App.deleteResume('${resume.id}')" class="p-1.5 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40" title="Delete"><i class="ph ph-trash"></i></button>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center mb-4 border border-indigo-500/30">
+                            <i class="ph ph-file-text text-2xl text-indigo-400"></i>
+                        </div>
+                        <h3 class="font-bold text-lg mb-1 truncate">${resume.title}</h3>
+                        <p class="text-xs text-gray-400 mb-4 flex items-center gap-1"><i class="ph ph-clock"></i> Updated ${date}</p>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] px-2 py-1 rounded bg-white/5 border border-white/10 uppercase">${resume.template}</span>
+                        </div>
+                    `;
+                    card.onclick = () => App.openResume(resume);
+                    grid.appendChild(card);
+                });
+            },
+
+            createNewResume: () => {
+                STATE.currentResume = createEmptyResume();
+                App.openBuilder();
+            },
+
+            openResume: (resumeData) => {
+                STATE.currentResume = resumeData;
+                App.openBuilder();
+            },
+
+            openBuilder: () => {
+                UI.navigate('builder');
+                document.getElementById('resume-title-input').value = STATE.currentResume.title;
+                document.getElementById('template-selector').value = STATE.currentResume.template;
+                Builder.renderForm();
+                Builder.renderPreview();
+                // Open first section
+                setTimeout(()=> { document.getElementById(`content-personal`).classList.remove('hidden'); document.getElementById(`caret-personal`).style.transform = 'rotate(180deg)';}, 100);
+            },
+
+            deleteResume: async (id) => {
+                if(confirm("Are you sure you want to delete this resume?")) {
+                    const success = await DB.deleteResume(id);
+                    if(success) {
+                        UI.showToast("Resume deleted", "success");
+                        App.loadDashboard();
+                    }
+                }
+            },
+
+            startBuilder: () => {
+                if(STATE.user) {
+                    App.createNewResume();
+                } else {
+                    // Start as guest
+                    App.createNewResume();
+                    UI.showToast("Playing as Guest. Data saved to browser.", "info");
+                }
+            }
+        };
+
+        // Expose to window for inline HTML handlers
+        window.UI = UI;
+        window.Auth = Auth;
+        window.Builder = Builder;
+        window.App = App;
+        window.AI = AI;
+
+        // Boot
+        window.onload = App.init;
+    </script>
+</body>
+</html>
