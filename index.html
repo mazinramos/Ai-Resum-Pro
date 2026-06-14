@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="google-site-verification" content="IH_dYUXH_BQW7TR7uUDlCoLQvJy0kQdNy503aXl8W8w" />
     <title>AI Resume Builder Pro</title>
     
     <!-- Fonts -->
@@ -13,7 +12,7 @@
     
     <!-- Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
+    <script src="[https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js](https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js)"></script>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -263,13 +262,7 @@
                 </button>
             </div>
             
-            <div class="mt-20 relative w-full max-w-4xl rounded-2xl overflow-hidden glass border border-white/20 shadow-2xl p-2">
-                <div class="bg-darker rounded-xl overflow-hidden aspect-video relative flex items-center justify-center">
-                    <i class="ph ph-play-circle text-6xl text-white/50 hover:text-white cursor-pointer transition"></i>
-                    <!-- Placeholder for app screenshot -->
-                    <div class="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-purple-500/10 pointer-events-none"></div>
-                </div>
-            </div>
+            
         </section>
 
         <!-- PRICING VIEW -->
@@ -1235,19 +1228,35 @@
                 }, 500);
             },
 
-            exportPDF: () => {
+           exportPDF: () => {
                 const element = document.getElementById('preview-container');
+
+                // حفظ التصميم الحالي وإلغاء أي تصغير مؤقتاً لتجنب الورقة البيضاء
+                const originalTransform = element.style.transform;
+                element.style.transform = 'none';
+
                 const opt = {
                     margin:       0,
                     filename:     `${STATE.currentResume.title.replace(/\s+/g, '_')}.pdf`,
                     image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { scale: 2, useCORS: true },
+                    html2canvas:  { 
+                        scale: 2, 
+                        useCORS: true,
+                        scrollY: 0, // الأهم لحل مشكلة الورقة البيضاء
+                        scrollX: 0
+                    },
                     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 };
                 
                 UI.showToast("Generating PDF... Please wait.", "info");
+
                 html2pdf().set(opt).from(element).save().then(()=> {
+                    // إرجاع التصميم كما كان بعد الانتهاء
+                    element.style.transform = originalTransform;
                     UI.showToast("PDF Downloaded!", "success");
+                }).catch(() => {
+                    // إرجاع التصميم في حال حدث خطأ
+                    element.style.transform = originalTransform;
                 });
             },
             
