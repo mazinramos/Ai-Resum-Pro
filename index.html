@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr" class="dark">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,24 +26,35 @@
                         serif: ['Playfair Display', 'serif']
                     },
                     colors: {
-                        primary: '#6366f1',
-                        secondary: '#a855f7',
-                        dark: '#0a0a0b',
-                        darker: '#050505',
+                        /* Brand palette: a calm signal-teal (growth, trust, focus) replaces the
+                           generic AI indigo/purple. Re-mapping Tailwind's own "indigo" scale
+                           means every existing indigo-* class in the markup below picks up the
+                           new identity automatically, with no risky find/replace across 1400
+                           lines of working markup. */
+                        indigo: {
+                            50:  '#EFFAF6',
+                            100: '#D7F1E7',
+                            200: '#AEE3CE',
+                            300: '#7BCFB1',
+                            400: '#48B693',
+                            500: '#189B78',
+                            600: '#117D61',
+                            700: '#0E634E',
+                            800: '#0C4F3F',
+                            900: '#0A4033'
+                        },
+                        purple: {
+                            50: '#FEF6EC', 100: '#FCE7CB', 200: '#F8CD96', 300: '#F3AE5F',
+                            400: '#EE9339', 500: '#E37B22', 600: '#C2621B', 700: '#984C16',
+                            800: '#793C13', 900: '#5F3010'
+                        },
+                        primary: '#189B78',
+                        secondary: '#E37B22',
+                        dark: '#0B1512',
+                        darker: '#070D0B',
                         card: 'rgba(255, 255, 255, 0.03)',
                         cardHover: 'rgba(255, 255, 255, 0.05)',
                         border: 'rgba(255, 255, 255, 0.1)',
-                    },
-                    animation: {
-                        'blob': 'blob 7s infinite',
-                    },
-                    keyframes: {
-                        blob: {
-                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
-                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
-                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
-                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
-                        }
                     }
                 }
             }
@@ -55,60 +66,76 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
-        /* Base & Scrollbar */
+        /* ============================================================
+           Design tokens. Light mode is the identity's foundation (white /
+           off-white surfaces, dark ink text, one brand color used with
+           restraint). Dark mode is a real elevated-surface theme, not an
+           inverted glass effect.
+        ============================================================ */
         :root {
-            --bg-color: #ffffff;
-            --text-color: #111827;
-            --card-bg: #f3f4f6;
-            --border-color: #e5e7eb;
+            --bg-color: #FFFFFF;
+            --bg-subtle: #F7F8F7;
+            --text-color: #14201C;
+            --text-muted: #5B6B65;
+            --card-bg: #FFFFFF;
+            --surface-2: #F2F4F3;
+            --border-color: #E4E9E6;
+            --shadow-color: 220 20% 10%;
         }
         .dark {
-            --bg-color: #0a0a0b;
-            --text-color: #f9fafb;
-            --card-bg: rgba(255, 255, 255, 0.03);
-            --border-color: rgba(255, 255, 255, 0.1);
+            --bg-color: #0C1512;
+            --bg-subtle: #0A1210;
+            --text-color: #EEF4F1;
+            --text-muted: #9BAAA4;
+            --card-bg: #101C18;
+            --surface-2: #16241F;
+            --border-color: #223530;
+            --shadow-color: 0 0% 0%;
         }
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            transition: background-color 0.3s, color 0.3s;
+            transition: background-color 0.2s, color 0.2s;
             overflow-x: hidden;
         }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+        ::-webkit-scrollbar-thumb:hover { background: #189B78; }
 
-        /* Custom Cursor */
-        #cursor-glow {
-            position: fixed;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, rgba(0,0,0,0) 70%);
-            border-radius: 50%;
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            z-index: 0;
-            transition: opacity 0.3s;
+        /* Accessible focus ring, keyboard-only (doesn't fire on mouse clicks) */
+        :focus-visible {
+            outline: 2px solid #189B78;
+            outline-offset: 2px;
+            border-radius: 4px;
         }
 
-        /* Glassmorphism Utilities */
-        .glass {
+        /* Skip link for keyboard/screen-reader users */
+        .skip-link {
+            position: absolute; left: -9999px; top: 0; z-index: 200;
+            background: #189B78; color: #fff; padding: 10px 16px; border-radius: 0 0 8px 0;
+        }
+        .skip-link:focus { left: 0; }
+
+        /* Surface card: flat, one consistent elevation vocabulary — no glass blur. */
+        .surface {
             background: var(--card-bg);
-            -webkit-backdrop-filter: blur(12px);
-            backdrop-filter: blur(12px);
             border: 1px solid var(--border-color);
+            box-shadow: 0 1px 2px hsl(var(--shadow-color) / 0.04);
         }
-        .glass-panel {
-            background: rgba(10, 10, 11, 0.7);
-            backdrop-filter: blur(20px);
+        .surface-panel {
+            background: var(--bg-color);
             border-right: 1px solid var(--border-color);
         }
-        
-        html[dir="rtl"] .glass-panel {
+        html[dir="rtl"] .surface-panel {
             border-right: none;
             border-left: 1px solid var(--border-color);
         }
+        /* Backward-compatible aliases so existing .glass / .glass-panel markup below
+           renders with the new flat surface system instead of heavy blur glassmorphism. */
+        .glass { background: var(--card-bg); border: 1px solid var(--border-color); }
+        .glass-panel { background: var(--bg-color); border-right: 1px solid var(--border-color); }
+        html[dir="rtl"] .glass-panel { border-right: none; border-left: 1px solid var(--border-color); }
 
         /* Resume Preview Container (A4 Aspect Ratio) */
         .a4-container {
@@ -117,7 +144,7 @@
             aspect-ratio: 1 / 1.414;
             background: white;
             color: black;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 40px -16px rgba(20, 32, 28, 0.35);
             overflow: hidden;
             transform-origin: top center;
         }
@@ -125,17 +152,17 @@
         /* Input Styles */
         .form-input {
             width: 100%;
-            background: transparent;
+            background: var(--bg-color);
             border: 1px solid var(--border-color);
             border-radius: 0.5rem;
             padding: 0.75rem 1rem;
             color: inherit;
-            transition: all 0.2s;
+            transition: border-color 0.15s, box-shadow 0.15s;
         }
         .form-input:focus {
             outline: none;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+            border-color: #189B78;
+            box-shadow: 0 0 0 3px rgba(24,155,120,0.15);
         }
 
         /* View Management */
@@ -146,12 +173,16 @@
 
         /* Loader */
         .loader {
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top: 3px solid #6366f1;
+            border: 3px solid var(--border-color);
+            border-top: 3px solid #189B78;
             border-radius: 50%;
             width: 24px;
             height: 24px;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .loader { animation-duration: 1.6s; }
+            * { scroll-behavior: auto !important; }
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
@@ -168,68 +199,72 @@
         html[dir="rtl"] #toast-container { right: auto; left: 20px; }
         
         .toast {
-            padding: 12px 24px;
-            border-radius: 8px;
-            background: #111827;
+            padding: 12px 20px;
+            border-radius: 10px;
+            background: #14201C;
             color: white;
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 10px 24px -8px rgba(0,0,0,0.35);
             display: flex;
             align-items: center;
             gap: 10px;
+            font-size: 0.9rem;
             transform: translateX(100%);
         }
         html[dir="rtl"] .toast { transform: translateX(-100%); }
 
         /* Template specific styles used in preview */
-        .tpl-modern .header { background: #111827; color: white; }
+        .tpl-modern .header { background: #14201C; color: white; }
         .tpl-minimal .header { border-bottom: 2px solid #e5e7eb; }
         .tpl-executive { font-family: 'Playfair Display', serif; }
         .tpl-developer { font-family: 'Fira Code', monospace; }
-        .tpl-creative .sidebar { background: #6366f1; color: white; }
+        .tpl-creative .sidebar { background: #189B78; color: white; }
+
+        /* Print: only the resume preview is meaningful on paper */
+        @media print {
+            body * { visibility: hidden; }
+            #preview-container, #preview-container * { visibility: visible; }
+            #preview-container { position: absolute; inset: 0; box-shadow: none; }
+        }
     </style>
 </head>
 <body class="antialiased min-h-screen relative font-sans">
-
-    <!-- Global Background Effects -->
-    <div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
-        <div class="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div class="absolute top-0 -right-4 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div class="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-    </div>
-    <div id="cursor-glow"></div>
-
+    <a href="#main-content" class="skip-link" data-i18n="skipToContent">Skip to content</a>
     <!-- Navbar -->
-    <nav class="fixed top-0 w-full z-50 glass border-b border-white/10 px-6 py-4 transition-all duration-300">
+    <nav class="fixed top-0 w-full z-50 surface border-b px-6 py-3 transition-all duration-300" style="border-color:var(--border-color)">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-2 cursor-pointer" onclick="UI.navigate('landing')">
-                <i class="ph-fill ph-magic-wand text-3xl text-indigo-500"></i>
-                <span class="font-bold text-xl tracking-tight">AI Resume<span class="text-indigo-500">Pro</span></span>
+            <div class="flex items-center gap-2.5 cursor-pointer" onclick="UI.navigate('landing')" role="button" tabindex="0" aria-label="Resumatic home" onkeydown="if(event.key==='Enter')UI.navigate('landing')">
+                <svg width="30" height="30" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <rect width="32" height="32" rx="9" fill="#189B78"/>
+                    <path d="M9.5 17.2L13.6 21.3L22.5 11.4" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="24.5" cy="8.5" r="2.5" fill="#E37B22"/>
+                </svg>
+                <span class="font-bold text-xl tracking-tight">Resu<span class="text-indigo-500">matic</span></span>
             </div>
             
-            <div class="flex items-center gap-4">
-                <button onclick="UI.toggleLanguage()" class="p-2 rounded-full hover:bg-white/10 transition-colors" title="Toggle Language">
+            <div class="flex items-center gap-2">
+                <button onclick="UI.toggleLanguage()" class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors" title="Toggle Language" aria-label="Switch language">
                     <i class="ph ph-translate text-xl"></i>
                 </button>
-                <button onclick="UI.toggleTheme()" class="p-2 rounded-full hover:bg-white/10 transition-colors" title="Toggle Theme">
+                <button onclick="UI.toggleTheme()" class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors" title="Toggle Theme" aria-label="Toggle dark mode">
                     <i class="ph ph-moon text-xl" id="theme-icon"></i>
                 </button>
                 
-                <div id="auth-nav-guest" class="flex gap-2">
-                    <button onclick="UI.showModal('login-modal')" class="px-4 py-2 rounded-lg font-medium hover:bg-white/5 transition-colors" data-i18n="login">Login</button>
+                <div id="auth-nav-guest" class="flex gap-2 ml-1">
+                    <button onclick="UI.showModal('login-modal')" class="px-4 py-2 rounded-lg font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors" data-i18n="login">Login</button>
                     <button onclick="UI.showModal('signup-modal')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors shadow-lg shadow-indigo-500/20" data-i18n="signup">Sign Up</button>
                 </div>
 
                 <div id="auth-nav-user" class="hidden items-center gap-4">
-                    <button onclick="UI.navigate('dashboard')" class="text-sm font-medium hover:text-indigo-400 transition" data-i18n="dashboard">Dashboard</button>
+                    <button onclick="UI.navigate('dashboard')" class="text-sm font-medium hover:text-indigo-500 transition" data-i18n="dashboard">Dashboard</button>
                     <div class="relative group cursor-pointer">
-                        <div class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/50">
-                            <i class="ph ph-user text-xl text-indigo-400"></i>
+                        <div class="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center border border-indigo-500/30">
+                            <i class="ph ph-user text-xl text-indigo-600"></i>
                         </div>
-                        <div class="absolute right-0 mt-2 w-48 glass rounded-xl shadow-xl py-2 hidden group-hover:block border border-white/10">
-                            <div class="px-4 py-2 border-b border-white/10 text-sm truncate" id="user-email-display">user@example.com</div>
-                            <button onclick="UI.navigate('pricing')" class="w-full text-left px-4 py-2 hover:bg-white/5 text-sm flex items-center gap-2"><i class="ph ph-star text-yellow-400"></i> <span data-i18n="upgrade">Upgrade</span></button>
-                            <button onclick="Auth.logout()" class="w-full text-left px-4 py-2 hover:bg-white/5 text-sm text-red-400 flex items-center gap-2"><i class="ph ph-sign-out"></i> <span data-i18n="logout">Logout</span></button>
+                        <div class="absolute right-0 mt-2 w-52 surface rounded-xl shadow-xl py-2 hidden group-hover:block" style="border-color:var(--border-color)">
+                            <div class="px-4 py-2 border-b text-sm truncate" style="border-color:var(--border-color)" id="user-email-display">user@example.com</div>
+                            <button onclick="UI.navigate('pricing')" class="w-full text-left px-4 py-2 hover:bg-black/5 dark:hover:bg-white/5 text-sm flex items-center gap-2"><i class="ph ph-star text-amber-500"></i> <span data-i18n="upgrade">Upgrade</span></button>
+                            <button onclick="Auth.logout()" class="w-full text-left px-4 py-2 hover:bg-black/5 dark:hover:bg-white/5 text-sm text-red-500 flex items-center gap-2"><i class="ph ph-sign-out"></i> <span data-i18n="logout">Logout</span></button>
                         </div>
                     </div>
                 </div>
@@ -238,66 +273,184 @@
     </nav>
 
     <!-- Main Content Container -->
-    <main class="pt-20 min-h-screen">
+    <main id="main-content" class="pt-20 min-h-screen">
 
         <!-- LANDING VIEW -->
-        <section id="view-landing" class="view-section active max-w-7xl mx-auto px-6 py-20 flex flex-col items-center justify-center min-h-[80vh] text-center">
-            <div class="inline-block px-4 py-1.5 rounded-full glass text-sm font-medium text-indigo-400 mb-6 border border-indigo-500/30">
-                ✨ <span data-i18n="badgeNew">Powered by Advanced AI</span>
+        <section id="view-landing" class="view-section active">
+        <div class="max-w-5xl mx-auto px-6 pt-16 pb-20 flex flex-col items-center text-center">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full surface text-sm font-medium mb-7" style="color:#0E634E;border-color:#AEE3CE">
+                <i class="ph-fill ph-check-circle"></i> <span data-i18n="badgeNew">New: instant ATS readability check</span>
             </div>
-            <h1 class="text-5xl md:text-7xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-100 to-indigo-400">
-                <span data-i18n="heroTitle1">Land your dream job</span><br/>
-                <span data-i18n="heroTitle2">with an AI-crafted resume.</span>
+            <h1 class="text-4xl md:text-6xl font-bold tracking-tight mb-6 max-w-3xl leading-[1.1]">
+                <span data-i18n="heroTitle1">A resume that reads well</span><br/>
+                <span data-i18n="heroTitle2" class="text-indigo-500">to people, and to hiring software.</span>
             </h1>
-            <p class="text-lg md:text-xl text-gray-400 max-w-2xl mb-10" data-i18n="heroSub">
-                Build, edit, and export ATS-friendly resumes in minutes. Stand out from the crowd with beautiful templates and smart content suggestions.
+            <p class="text-lg md:text-xl mb-10 max-w-xl" style="color:var(--text-muted)" data-i18n="heroSub">
+                Fill in your experience once. Get a clean, ATS-friendly resume in minutes — with clear feedback on what to improve and why.
             </p>
-            <div class="flex flex-col sm:flex-row gap-4">
-                <button onclick="App.startBuilder()" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-[0_0_30px_rgba(99,102,241,0.4)] flex items-center justify-center gap-2">
-                    <span data-i18n="buildResumeBtn">Build Resume Now</span>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button onclick="App.startBuilder()" class="px-7 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
+                    <span data-i18n="buildResumeBtn">Start my resume</span>
                     <i class="ph ph-arrow-right"></i>
                 </button>
-                <button onclick="UI.navigate('pricing')" class="px-8 py-4 glass hover:bg-white/5 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2">
-                    <span data-i18n="viewPricing">View Pricing</span>
+                <button onclick="UI.navigate('pricing')" class="px-7 py-3.5 surface hover:bg-black/5 dark:hover:bg-white/5 rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2">
+                    <span data-i18n="viewPricing">See pricing</span>
                 </button>
             </div>
-            
-            
+            <p class="text-xs mt-5" style="color:var(--text-muted)" data-i18n="heroNote">Free to start. No credit card required.</p>
+        </div>
+
+        <!-- HOW IT WORKS -->
+        <div class="max-w-6xl mx-auto px-6 py-16 border-t" style="border-color:var(--border-color)">
+            <h2 class="text-2xl md:text-3xl font-bold text-center mb-12" data-i18n="howTitle">How it works</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center mx-auto mb-4 font-bold text-lg">1</div>
+                    <h3 class="font-bold mb-2" data-i18n="how1Title">Add your experience</h3>
+                    <p class="text-sm" style="color:var(--text-muted)" data-i18n="how1Body">Answer a short set of questions. Sections you don't need — like projects or volunteering — stay out of your way.</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center mx-auto mb-4 font-bold text-lg">2</div>
+                    <h3 class="font-bold mb-2" data-i18n="how2Title">Pick a template</h3>
+                    <p class="text-sm" style="color:var(--text-muted)" data-i18n="how2Body">Choose a layout that fits your field. Every template is built to stay readable when printed or scanned.</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center mx-auto mb-4 font-bold text-lg">3</div>
+                    <h3 class="font-bold mb-2" data-i18n="how3Title">Check and export</h3>
+                    <p class="text-sm" style="color:var(--text-muted)" data-i18n="how3Body">Review your readiness score, fix what's flagged, then download a print-ready PDF.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FEATURES -->
+        <div class="py-16 border-t" style="border-color:var(--border-color);background:var(--bg-subtle)">
+            <div class="max-w-6xl mx-auto px-6">
+                <h2 class="text-2xl md:text-3xl font-bold text-center mb-12" data-i18n="featTitle">Everything a job search needs</h2>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <div class="surface rounded-xl p-6">
+                        <i class="ph ph-magic-wand text-2xl text-indigo-600 mb-3"></i>
+                        <h3 class="font-bold mb-1" data-i18n="featAiTitle">Writing assistance</h3>
+                        <p class="text-sm" style="color:var(--text-muted)" data-i18n="featAiBody">Turn a rough draft into clear, action-oriented bullet points — you stay in control of every word.</p>
+                    </div>
+                    <div class="surface rounded-xl p-6">
+                        <i class="ph ph-list-checks text-2xl text-indigo-600 mb-3"></i>
+                        <h3 class="font-bold mb-1" data-i18n="featAtsTitle">ATS-friendly structure</h3>
+                        <p class="text-sm" style="color:var(--text-muted)" data-i18n="featAtsBody">Standard headings and clean text layout, so applicant tracking systems can read your resume correctly.</p>
+                    </div>
+                    <div class="surface rounded-xl p-6">
+                        <i class="ph ph-gauge text-2xl text-indigo-600 mb-3"></i>
+                        <h3 class="font-bold mb-1" data-i18n="featScoreTitle">Readiness feedback</h3>
+                        <p class="text-sm" style="color:var(--text-muted)" data-i18n="featScoreBody">See exactly what's holding your resume back, and why it matters — not just a bare score.</p>
+                    </div>
+                    <div class="surface rounded-xl p-6">
+                        <i class="ph ph-file-pdf text-2xl text-indigo-600 mb-3"></i>
+                        <h3 class="font-bold mb-1" data-i18n="featPdfTitle">Reliable PDF export</h3>
+                        <p class="text-sm" style="color:var(--text-muted)" data-i18n="featPdfBody">What you see is what prints — tested for one-page and multi-page resumes alike.</p>
+                    </div>
+                    <div class="surface rounded-xl p-6">
+                        <i class="ph ph-swatches text-2xl text-indigo-600 mb-3"></i>
+                        <h3 class="font-bold mb-1" data-i18n="featTplTitle">Genuinely different templates</h3>
+                        <p class="text-sm" style="color:var(--text-muted)" data-i18n="featTplBody">Not one layout in five colors — each template has its own structure and personality.</p>
+                    </div>
+                    <div class="surface rounded-xl p-6">
+                        <i class="ph ph-moon text-2xl text-indigo-600 mb-3"></i>
+                        <h3 class="font-bold mb-1" data-i18n="featThemeTitle">Light and dark mode</h3>
+                        <p class="text-sm" style="color:var(--text-muted)" data-i18n="featThemeBody">Work comfortably at any hour — the editor adapts, your exported resume always stays print-perfect white.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ATS SECTION -->
+        <div class="max-w-5xl mx-auto px-6 py-16">
+            <div class="grid md:grid-cols-2 gap-10 items-center">
+                <div>
+                    <h2 class="text-2xl md:text-3xl font-bold mb-4" data-i18n="atsTitle">Built with ATS in mind</h2>
+                    <p class="mb-4" style="color:var(--text-muted)" data-i18n="atsBody1">Most employers screen resumes with applicant tracking software before a person ever sees them. We structure every template with standard section names, clean text order, and safe formatting so that software can parse it correctly.</p>
+                    <p class="text-sm" style="color:var(--text-muted)" data-i18n="atsBody2">No resume can guarantee a 100% pass rate — every ATS is configured differently. What we can promise is a resume that's designed for ATS readability, not one that fights against it.</p>
+                </div>
+                <ul class="surface rounded-2xl p-6 space-y-3 text-sm">
+                    <li class="flex items-start gap-2"><i class="ph-fill ph-check-circle text-indigo-600 mt-0.5"></i> <span data-i18n="atsLi1">Standard, recognizable section headings</span></li>
+                    <li class="flex items-start gap-2"><i class="ph-fill ph-check-circle text-indigo-600 mt-0.5"></i> <span data-i18n="atsLi2">No text trapped inside images or icons</span></li>
+                    <li class="flex items-start gap-2"><i class="ph-fill ph-check-circle text-indigo-600 mt-0.5"></i> <span data-i18n="atsLi3">No multi-column tables that scramble reading order</span></li>
+                    <li class="flex items-start gap-2"><i class="ph-fill ph-check-circle text-indigo-600 mt-0.5"></i> <span data-i18n="atsLi4">Photo is optional, and never required</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="max-w-3xl mx-auto px-6 py-16 border-t" style="border-color:var(--border-color)">
+            <h2 class="text-2xl md:text-3xl font-bold text-center mb-8" data-i18n="faqTitle">Frequently asked questions</h2>
+            <div class="space-y-3">
+                <details class="surface rounded-xl p-4">
+                    <summary class="font-semibold cursor-pointer" data-i18n="faq1Q">Is my resume really ATS-friendly?</summary>
+                    <p class="text-sm mt-2" style="color:var(--text-muted)" data-i18n="faq1A">Templates follow ATS-readability best practices — clear headings, linear text, no scrambled columns. No tool can promise 100% compatibility with every system, but nothing here works against you.</p>
+                </details>
+                <details class="surface rounded-xl p-4">
+                    <summary class="font-semibold cursor-pointer" data-i18n="faq2Q">Do I need a profile photo?</summary>
+                    <p class="text-sm mt-2" style="color:var(--text-muted)" data-i18n="faq2A">No. It's optional on every template, and left out entirely on ATS-friendly ones. Norms around photos vary by market and role — use your judgment.</p>
+                </details>
+                <details class="surface rounded-xl p-4">
+                    <summary class="font-semibold cursor-pointer" data-i18n="faq3Q">What happens to my data?</summary>
+                    <p class="text-sm mt-2" style="color:var(--text-muted)" data-i18n="faq3A">Your resume is tied to your account and only you can access, edit or delete it. If you're not signed in, it's saved locally in your browser only.</p>
+                </details>
+                <details class="surface rounded-xl p-4">
+                    <summary class="font-semibold cursor-pointer" data-i18n="faq4Q">Can I cancel Premium anytime?</summary>
+                    <p class="text-sm mt-2" style="color:var(--text-muted)" data-i18n="faq4A">Yes — cancel whenever you like from your account. You keep Premium features until the end of the billing period you already paid for.</p>
+                </details>
+            </div>
+        </div>
+
+        <!-- FINAL CTA -->
+        <div class="max-w-4xl mx-auto px-6 pb-20 text-center">
+            <div class="surface rounded-2xl p-10 md:p-14" style="background:var(--bg-subtle)">
+                <h2 class="text-2xl md:text-3xl font-bold mb-3" data-i18n="finalCtaTitle">Ready to put your experience into words?</h2>
+                <p class="mb-7" style="color:var(--text-muted)" data-i18n="finalCtaBody">Start free — upgrade only if you need more.</p>
+                <button onclick="App.startBuilder()" class="px-7 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-base transition-all inline-flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+                    <span data-i18n="buildResumeBtn">Start my resume</span>
+                    <i class="ph ph-arrow-right"></i>
+                </button>
+            </div>
+        </div>
         </section>
 
         <!-- PRICING VIEW -->
-        <section id="view-pricing" class="view-section max-w-7xl mx-auto px-6 py-20">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold mb-4" data-i18n="pricingTitle">Simple, transparent pricing</h2>
-                <p class="text-gray-400" data-i18n="pricingSub">Invest in your career with our powerful tools.</p>
+        <section id="view-pricing" class="view-section max-w-5xl mx-auto px-6 py-20">
+            <div class="text-center mb-14">
+                <h2 class="text-3xl md:text-4xl font-bold mb-3" data-i18n="pricingTitle">Simple, transparent pricing</h2>
+                <p style="color:var(--text-muted)" data-i18n="pricingSub">Start for free. Upgrade only when you need more.</p>
             </div>
-            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
                 <!-- Free Plan -->
-                <div class="glass p-8 rounded-2xl border border-white/10 hover:border-indigo-500/50 transition-colors">
-                    <h3 class="text-2xl font-bold mb-2">Basic</h3>
-                    <div class="text-4xl font-bold mb-6">$0<span class="text-lg text-gray-400 font-normal">/mo</span></div>
-                    <ul class="space-y-4 mb-8 text-gray-300">
-                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-green-400"></i> Up to 3 Resumes</li>
-                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-green-400"></i> 2 Standard Templates</li>
-                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-green-400"></i> Basic PDF Export</li>
+                <div class="surface p-8 rounded-2xl">
+                    <h3 class="text-xl font-bold mb-1" data-i18n="planBasic">Basic</h3>
+                    <div class="text-4xl font-bold mb-6">$0<span class="text-base font-normal" style="color:var(--text-muted)">/mo</span></div>
+                    <ul class="space-y-3 mb-8 text-sm">
+                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-indigo-600"></i> <span data-i18n="basicLi1">Up to 3 resumes</span></li>
+                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-indigo-600"></i> <span data-i18n="basicLi2">2 standard templates</span></li>
+                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-indigo-600"></i> <span data-i18n="basicLi3">PDF export with watermark</span></li>
+                        <li class="flex items-center gap-2" style="color:var(--text-muted)"><i class="ph ph-x-circle"></i> <span data-i18n="basicLi4">No AI writing assistance</span></li>
+                        <li class="flex items-center gap-2" style="color:var(--text-muted)"><i class="ph ph-x-circle"></i> <span data-i18n="basicLi5">No job-description matching</span></li>
                     </ul>
-                    <button onclick="UI.navigate('dashboard')" class="w-full py-3 rounded-lg glass hover:bg-white/10 font-bold transition">Current Plan</button>
+                    <button onclick="UI.navigate('dashboard')" class="w-full py-3 rounded-lg surface hover:bg-black/5 dark:hover:bg-white/10 font-bold transition" data-i18n="currentPlan">Current plan</button>
                 </div>
                 <!-- Pro Plan -->
-                <div class="glass p-8 rounded-2xl border border-indigo-500 shadow-[0_0_30px_rgba(99,102,241,0.2)] relative">
-                    <div class="absolute top-0 right-0 bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-xl">POPULAR</div>
-                    <h3 class="text-2xl font-bold mb-2 flex items-center gap-2">Pro <i class="ph-fill ph-star text-yellow-400"></i></h3>
-                    <div class="text-4xl font-bold mb-6">$12<span class="text-lg text-gray-400 font-normal">/mo</span></div>
-                    <ul class="space-y-4 mb-8 text-gray-300">
-                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-indigo-400"></i> Unlimited Resumes</li>
-                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-indigo-400"></i> All Premium Templates</li>
-                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-indigo-400"></i> AI Content Generation</li>
-                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-indigo-400"></i> Advanced Customization</li>
-                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-indigo-400"></i> No Watermark PDF</li>
+                <div class="surface p-8 rounded-2xl relative" style="border-color:#189B78;box-shadow:0 0 0 1px #189B78">
+                    <div class="absolute top-0 right-0 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-xl" data-i18n="popular">POPULAR</div>
+                    <h3 class="text-xl font-bold mb-1 flex items-center gap-2" data-i18n="planPro">Premium <i class="ph-fill ph-star text-amber-500"></i></h3>
+                    <div class="text-4xl font-bold mb-1">$12<span class="text-base font-normal" style="color:var(--text-muted)">/mo</span></div>
+                    <p class="text-xs mb-6" style="color:var(--text-muted)" data-i18n="proSub">Billed monthly. Cancel anytime — no auto-renewal surprises.</p>
+                    <ul class="space-y-3 mb-8 text-sm">
+                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-indigo-600"></i> <span data-i18n="proLi1">Unlimited resumes</span></li>
+                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-indigo-600"></i> <span data-i18n="proLi2">All templates</span></li>
+                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-indigo-600"></i> <span data-i18n="proLi3">AI writing assistance</span></li>
+                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-indigo-600"></i> <span data-i18n="proLi4">Job-description matching</span></li>
+                        <li class="flex items-center gap-2"><i class="ph ph-check-circle text-indigo-600"></i> <span data-i18n="proLi5">PDF export, no watermark</span></li>
                     </ul>
-                    <button onclick="UI.showToast('Payment gateway integration pending.', 'info')" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-bold transition shadow-lg shadow-indigo-500/20" data-i18n="upgradeNow">Upgrade Now</button>
+                    <button onclick="UI.showToast(Utils.translate('checkoutSoon'), 'info')" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-bold transition" data-i18n="upgradeNow">Upgrade now</button>
                 </div>
             </div>
+            <p class="text-center text-xs mt-8" style="color:var(--text-muted)" data-i18n="pricingFooterNote">Prices shown in USD. Taxes may apply depending on your location.</p>
         </section>
 
         <!-- DASHBOARD VIEW -->
@@ -305,7 +458,7 @@
             <div class="flex justify-between items-center mb-10">
                 <div>
                     <h2 class="text-3xl font-bold mb-2" data-i18n="myResumes">My Resumes</h2>
-                    <p class="text-gray-400" data-i18n="manageResumes">Manage and edit your saved resumes.</p>
+                    <p style="color:var(--text-muted)" data-i18n="manageResumes">Manage and edit your saved resumes.</p>
                 </div>
                 <button onclick="App.createNewResume()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition shadow-lg shadow-indigo-500/20 flex items-center gap-2">
                     <i class="ph ph-plus-circle text-xl"></i>
@@ -323,12 +476,13 @@
         <section id="view-builder" class="view-section builder-view h-[calc(100vh-80px)] w-full overflow-hidden relative">
             
             <!-- Left Sidebar: Controls & Inputs -->
-            <div class="w-full md:w-[400px] lg:w-[500px] h-full flex flex-col glass-panel relative z-10 flex-shrink-0">
+            <div class="w-full md:w-[400px] lg:w-[460px] h-full flex flex-col surface-panel relative z-10 flex-shrink-0" style="background:var(--bg-color)">
                 <!-- Builder Header -->
-                <div class="p-4 border-b border-white/10 flex justify-between items-center shrink-0 bg-darker/50">
-                    <input type="text" id="resume-title-input" class="bg-transparent border-none text-lg font-bold focus:outline-none focus:ring-1 ring-indigo-500 rounded px-2 py-1 w-2/3" value="Untitled Resume" onchange="Builder.updateMeta('title', this.value)">
+                <div class="p-4 border-b flex justify-between items-center shrink-0" style="border-color:var(--border-color)">
+                    <label for="resume-title-input" class="sr-only">Resume title</label>
+                    <input type="text" id="resume-title-input" aria-label="Resume title" class="bg-transparent border-none text-lg font-bold focus:outline-none focus:ring-1 ring-indigo-500 rounded px-2 py-1 w-2/3" value="Untitled Resume" onchange="Builder.updateMeta('title', this.value)">
                     <div class="flex gap-2">
-                        <button onclick="UI.navigate('dashboard')" class="p-2 rounded hover:bg-white/10 transition" title="Back to Dashboard"><i class="ph ph-x"></i></button>
+                        <button onclick="UI.navigate('dashboard')" class="p-2 rounded hover:bg-black/5 dark:hover:bg-white/10 transition" title="Back to Dashboard" aria-label="Back to dashboard"><i class="ph ph-x"></i></button>
                     </div>
                 </div>
 
@@ -338,8 +492,8 @@
                 </div>
 
                 <!-- Builder Footer / Actions -->
-                <div class="absolute bottom-0 left-0 w-full p-4 border-t border-white/10 bg-darker/90 backdrop-blur shrink-0 flex justify-between gap-2">
-                    <button onclick="Builder.saveResume()" class="flex-1 py-2 bg-white/10 hover:bg-white/20 rounded-lg font-medium transition flex items-center justify-center gap-2">
+                <div class="absolute bottom-0 left-0 w-full p-4 border-t shrink-0 flex justify-between gap-2" style="border-color:var(--border-color);background:var(--bg-color)">
+                    <button onclick="Builder.saveResume()" class="flex-1 py-2 surface hover:bg-black/5 dark:hover:bg-white/10 rounded-lg font-medium transition flex items-center justify-center gap-2">
                         <i class="ph ph-floppy-disk"></i> <span data-i18n="save">Save</span>
                     </button>
                     <button onclick="Builder.exportPDF()" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition flex items-center justify-center gap-2">
@@ -349,23 +503,23 @@
             </div>
 
             <!-- Right Area: Live Preview -->
-            <div class="flex-1 bg-neutral-900/50 h-full overflow-y-auto relative hidden md:flex flex-col items-center py-8">
+            <div class="flex-1 h-full overflow-y-auto relative hidden md:flex flex-col items-center py-8" style="background:var(--bg-subtle)">
                 <!-- Toolbar for preview -->
-                <div class="glass rounded-full px-4 py-2 flex items-center gap-4 mb-6 sticky top-0 z-20">
-                    <span class="text-sm text-gray-400 font-medium" data-i18n="template">Template:</span>
-                    <select id="template-selector" class="bg-transparent text-white border-none text-sm focus:outline-none cursor-pointer" onchange="Builder.changeTemplate(this.value)">
-                        <option value="modern" class="bg-dark">Modern</option>
-                        <option value="minimal" class="bg-dark">Minimal</option>
-                        <option value="executive" class="bg-dark">Executive</option>
-                        <option value="developer" class="bg-dark">Developer</option>
-                        <option value="creative" class="bg-dark">Creative</option>
+                <div class="surface rounded-full px-4 py-2 flex items-center gap-4 mb-6 sticky top-0 z-20">
+                    <label for="template-selector" class="text-sm font-medium" style="color:var(--text-muted)" data-i18n="template">Template:</label>
+                    <select id="template-selector" class="bg-transparent border-none text-sm focus:outline-none cursor-pointer" style="color:var(--text-color)" onchange="Builder.changeTemplate(this.value)">
+                        <option value="modern">Modern</option>
+                        <option value="minimal">Minimal</option>
+                        <option value="executive">Executive</option>
+                        <option value="developer">Developer</option>
+                        <option value="creative">Creative</option>
                     </select>
-                    <div class="w-px h-4 bg-white/20"></div>
-                    <button onclick="Builder.shareResume()" class="text-sm hover:text-indigo-400 flex items-center gap-1 transition"><i class="ph ph-share-network"></i> Share</button>
+                    <div class="w-px h-4" style="background:var(--border-color)"></div>
+                    <button onclick="Builder.shareResume()" class="text-sm hover:text-indigo-500 flex items-center gap-1 transition"><i class="ph ph-share-network"></i> <span data-i18n="share">Share</span></button>
                 </div>
 
                 <!-- Actual A4 Paper representation -->
-                <div id="preview-container" class="a4-container relative">
+                <div id="preview-container" class="a4-container relative" role="img" aria-label="Resume preview">
                     <!-- Template content injected here -->
                 </div>
                 <!-- Extra padding for scrolling -->
@@ -373,10 +527,10 @@
             </div>
             
             <!-- Mobile Preview Toggle -->
-            <button onclick="UI.toggleMobilePreview()" class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-indigo-600 rounded-full shadow-xl flex items-center justify-center text-white z-50">
+            <button onclick="UI.toggleMobilePreview()" class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-indigo-600 rounded-full shadow-xl flex items-center justify-center text-white z-50" aria-label="Toggle preview">
                 <i class="ph ph-eye text-2xl" id="mobile-preview-icon"></i>
             </button>
-            <div id="mobile-preview-panel" class="fixed inset-0 bg-dark z-40 flex-col overflow-y-auto pt-20 pb-10 items-center hidden">
+            <div id="mobile-preview-panel" class="fixed inset-0 z-40 flex-col overflow-y-auto pt-20 pb-10 items-center hidden" style="background:var(--bg-color)">
                 <div id="mobile-preview-container" class="a4-container scale-90 origin-top"></div>
             </div>
 
@@ -388,54 +542,114 @@
     <div id="modal-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity">
         
         <!-- Login Modal -->
-        <div id="login-modal" class="modal-content glass p-8 rounded-2xl w-full max-w-md hidden transform scale-95 transition-transform relative">
-            <button onclick="UI.hideModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="ph ph-x"></i></button>
+        <div id="login-modal" class="modal-content surface p-8 rounded-2xl w-full max-w-md hidden transform scale-95 transition-transform relative" style="background:var(--card-bg)">
+            <button onclick="UI.hideModal()" class="absolute top-4 right-4 p-1 rounded hover:bg-black/5 dark:hover:bg-white/10" style="color:var(--text-muted)" aria-label="Close"><i class="ph ph-x"></i></button>
             <h3 class="text-2xl font-bold mb-6 text-center" data-i18n="login">Login</h3>
             <div class="space-y-4">
-                <input type="email" id="login-email" class="form-input" placeholder="Email" data-i18n-placeholder="email">
-                <input type="password" id="login-password" class="form-input" placeholder="Password" data-i18n-placeholder="password">
-                <button onclick="Auth.loginWithEmail()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-bold transition">Login</button>
-                <div class="relative flex py-2 items-center">
-                    <div class="flex-grow border-t border-white/10"></div>
-                    <span class="flex-shrink-0 mx-4 text-gray-400 text-sm">Or</span>
-                    <div class="flex-grow border-t border-white/10"></div>
+                <div>
+                    <label for="login-email" class="block text-xs mb-1 pl-1" style="color:var(--text-muted)" data-i18n="email">Email</label>
+                    <input type="email" id="login-email" autocomplete="email" class="form-input" placeholder="you@example.com">
                 </div>
-                <button onclick="Auth.loginWithGoogle()" class="w-full py-3 glass hover:bg-white/10 rounded-lg font-bold transition flex items-center justify-center gap-2">
-                    <i class="ph-fill ph-google-logo"></i> Continue with Google
+                <div>
+                    <div class="flex justify-between items-baseline mb-1 pl-1">
+                        <label for="login-password" class="block text-xs" style="color:var(--text-muted)" data-i18n="password">Password</label>
+                        <button type="button" onclick="UI.showToast(Utils.translate('resetSent'),'info')" class="text-xs text-indigo-500 hover:underline" data-i18n="forgotPassword">Forgot password?</button>
+                    </div>
+                    <input type="password" id="login-password" autocomplete="current-password" class="form-input" placeholder="••••••••">
+                </div>
+                <button onclick="Auth.loginWithEmail()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-bold transition" data-i18n="login">Login</button>
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t" style="border-color:var(--border-color)"></div>
+                    <span class="flex-shrink-0 mx-4 text-sm" style="color:var(--text-muted)" data-i18n="or">Or</span>
+                    <div class="flex-grow border-t" style="border-color:var(--border-color)"></div>
+                </div>
+                <button onclick="Auth.loginWithGoogle()" class="w-full py-3 surface hover:bg-black/5 dark:hover:bg-white/10 rounded-lg font-bold transition flex items-center justify-center gap-2">
+                    <i class="ph-fill ph-google-logo"></i> <span data-i18n="continueGoogle">Continue with Google</span>
                 </button>
             </div>
         </div>
 
         <!-- Signup Modal -->
-        <div id="signup-modal" class="modal-content glass p-8 rounded-2xl w-full max-w-md hidden transform scale-95 transition-transform relative">
-            <button onclick="UI.hideModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="ph ph-x"></i></button>
+        <div id="signup-modal" class="modal-content surface p-8 rounded-2xl w-full max-w-md hidden transform scale-95 transition-transform relative" style="background:var(--card-bg)">
+            <button onclick="UI.hideModal()" class="absolute top-4 right-4 p-1 rounded hover:bg-black/5 dark:hover:bg-white/10" style="color:var(--text-muted)" aria-label="Close"><i class="ph ph-x"></i></button>
             <h3 class="text-2xl font-bold mb-6 text-center" data-i18n="signup">Create Account</h3>
             <div class="space-y-4">
-                <input type="email" id="signup-email" class="form-input" placeholder="Email">
-                <input type="password" id="signup-password" class="form-input" placeholder="Password">
-                <button onclick="Auth.signupWithEmail()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-bold transition">Sign Up</button>
+                <div>
+                    <label for="signup-email" class="block text-xs mb-1 pl-1" style="color:var(--text-muted)" data-i18n="email">Email</label>
+                    <input type="email" id="signup-email" autocomplete="email" class="form-input" placeholder="you@example.com">
+                </div>
+                <div>
+                    <label for="signup-password" class="block text-xs mb-1 pl-1" style="color:var(--text-muted)" data-i18n="password">Password</label>
+                    <input type="password" id="signup-password" autocomplete="new-password" class="form-input" placeholder="At least 8 characters">
+                </div>
+                <button onclick="Auth.signupWithEmail()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-bold transition" data-i18n="createAccount">Create Account</button>
+                <p class="text-xs text-center" style="color:var(--text-muted)" data-i18n="signupConsent">By continuing you agree to our Terms and Privacy Policy.</p>
             </div>
         </div>
 
         <!-- Share Modal -->
-        <div id="share-modal" class="modal-content glass p-8 rounded-2xl w-full max-w-md hidden transform scale-95 transition-transform relative text-center">
-            <button onclick="UI.hideModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="ph ph-x"></i></button>
-            <h3 class="text-2xl font-bold mb-4">Share Resume</h3>
-            <p class="text-gray-400 text-sm mb-6">Anyone with this link can view your resume.</p>
+        <div id="share-modal" class="modal-content surface p-8 rounded-2xl w-full max-w-md hidden transform scale-95 transition-transform relative text-center" style="background:var(--card-bg)">
+            <button onclick="UI.hideModal()" class="absolute top-4 right-4 p-1 rounded hover:bg-black/5 dark:hover:bg-white/10" style="color:var(--text-muted)" aria-label="Close"><i class="ph ph-x"></i></button>
+            <h3 class="text-2xl font-bold mb-4" data-i18n="shareResume">Share Resume</h3>
+            <p class="text-sm mb-6" style="color:var(--text-muted)" data-i18n="shareResumeSub">Anyone with this link can view your resume.</p>
             <div class="flex gap-2 mb-6">
-                <input type="text" id="share-link-input" class="form-input text-sm" readonly value="https://airesume.pro/r/xyz123">
-                <button onclick="UI.copyShareLink()" class="px-4 bg-white/10 hover:bg-white/20 rounded-lg transition"><i class="ph ph-copy"></i></button>
+                <label for="share-link-input" class="sr-only">Share link</label>
+                <input type="text" id="share-link-input" class="form-input text-sm" readonly value="https://resumatic.app/r/xyz123">
+                <button onclick="UI.copyShareLink()" class="px-4 surface hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition" aria-label="Copy link"><i class="ph ph-copy"></i></button>
             </div>
             <div class="flex justify-center gap-4">
-                <button class="p-3 rounded-full bg-[#25D366]/20 text-[#25D366] hover:bg-[#25D366]/30 transition"><i class="ph-fill ph-whatsapp-logo text-xl"></i></button>
-                <button class="p-3 rounded-full bg-[#0077b5]/20 text-[#0077b5] hover:bg-[#0077b5]/30 transition"><i class="ph-fill ph-linkedin-logo text-xl"></i></button>
-                <button class="p-3 rounded-full bg-black/20 text-white border border-white/10 hover:bg-white/10 transition"><i class="ph-fill ph-x-logo text-xl"></i></button>
+                <button class="p-3 rounded-full bg-[#25D366]/15 text-[#1DA851] hover:bg-[#25D366]/25 transition" aria-label="Share on WhatsApp"><i class="ph-fill ph-whatsapp-logo text-xl"></i></button>
+                <button class="p-3 rounded-full bg-[#0077b5]/15 text-[#0077b5] hover:bg-[#0077b5]/25 transition" aria-label="Share on LinkedIn"><i class="ph-fill ph-linkedin-logo text-xl"></i></button>
+                <button class="p-3 rounded-full surface hover:bg-black/5 dark:hover:bg-white/10 transition" aria-label="Share on X"><i class="ph-fill ph-x-logo text-xl"></i></button>
+            </div>
+        </div>
+
+        <!-- Onboarding Modal (short, skippable — 3 steps max) -->
+        <div id="onboarding-modal" class="modal-content surface p-8 rounded-2xl w-full max-w-md hidden transform scale-95 transition-transform relative" style="background:var(--card-bg)">
+            <button onclick="Onboarding.skip()" class="absolute top-4 right-4 text-xs font-medium hover:underline" style="color:var(--text-muted)" data-i18n="skip">Skip</button>
+            <div class="flex items-center gap-1.5 mb-6" aria-hidden="true">
+                <div id="ob-dot-1" class="h-1.5 flex-1 rounded-full bg-indigo-600"></div>
+                <div id="ob-dot-2" class="h-1.5 flex-1 rounded-full" style="background:var(--border-color)"></div>
+                <div id="ob-dot-3" class="h-1.5 flex-1 rounded-full" style="background:var(--border-color)"></div>
+            </div>
+
+            <div id="ob-step-1">
+                <h3 class="text-xl font-bold mb-1" data-i18n="obQ1">What are you creating your resume for?</h3>
+                <p class="text-sm mb-5" style="color:var(--text-muted)" data-i18n="obQ1Sub">This just helps us show you relevant tips — nothing else changes.</p>
+                <div class="space-y-2">
+                    <button onclick="Onboarding.choose('creating','student')" class="w-full text-left px-4 py-3 rounded-lg surface hover:border-indigo-500 transition" data-i18n="obStudent">Student</button>
+                    <button onclick="Onboarding.choose('creating','graduate')" class="w-full text-left px-4 py-3 rounded-lg surface hover:border-indigo-500 transition" data-i18n="obGraduate">Recent graduate</button>
+                    <button onclick="Onboarding.choose('creating','professional')" class="w-full text-left px-4 py-3 rounded-lg surface hover:border-indigo-500 transition" data-i18n="obProfessional">Working professional</button>
+                    <button onclick="Onboarding.choose('creating','switcher')" class="w-full text-left px-4 py-3 rounded-lg surface hover:border-indigo-500 transition" data-i18n="obSwitcher">Career switcher</button>
+                    <button onclick="Onboarding.choose('creating','other')" class="w-full text-left px-4 py-3 rounded-lg surface hover:border-indigo-500 transition" data-i18n="obOther">Other</button>
+                </div>
+            </div>
+
+            <div id="ob-step-2" class="hidden">
+                <h3 class="text-xl font-bold mb-1" data-i18n="obQ2">What role are you aiming for?</h3>
+                <p class="text-sm mb-5" style="color:var(--text-muted)" data-i18n="obQ2Sub">Optional — helps tailor suggestions later.</p>
+                <label for="ob-target-role" class="sr-only" data-i18n="obQ2">Target role</label>
+                <input type="text" id="ob-target-role" class="form-input mb-5" placeholder="e.g. Product Designer" data-i18n-placeholder="obRolePlaceholder">
+                <div class="flex gap-2">
+                    <button onclick="Onboarding.back()" class="px-4 py-2.5 rounded-lg surface hover:bg-black/5 dark:hover:bg-white/10 transition" data-i18n="back">Back</button>
+                    <button onclick="Onboarding.step2Next()" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition" data-i18n="continue">Continue</button>
+                </div>
+            </div>
+
+            <div id="ob-step-3" class="hidden">
+                <h3 class="text-xl font-bold mb-1" data-i18n="obQ3">Do you already have a resume?</h3>
+                <p class="text-sm mb-5" style="color:var(--text-muted)" data-i18n="obQ3Sub">If you do, you can still start fresh here — nothing is imported automatically.</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="Onboarding.finish('yes')" class="py-3 rounded-lg surface hover:border-indigo-500 transition font-medium" data-i18n="yes">Yes</button>
+                    <button onclick="Onboarding.finish('no')" class="py-3 rounded-lg surface hover:border-indigo-500 transition font-medium" data-i18n="no">No</button>
+                </div>
+                <button onclick="Onboarding.back()" class="mt-4 text-sm hover:underline" style="color:var(--text-muted)" data-i18n="back">Back</button>
             </div>
         </div>
     </div>
 
     <!-- Toast Container -->
-    <div id="toast-container"></div>
+    <div id="toast-container" role="status" aria-live="polite"></div>
 
     <!-- Firebase Imports & Script Configuration -->
     <script type="module">
@@ -482,16 +696,70 @@
         // --- I18N DICTIONARY ---
         const DICT = {
             en: {
-                buildResumeBtn: "Build Resume Now",
+                buildResumeBtn: "Start my resume",
                 login: "Login", signup: "Sign Up", logout: "Logout", dashboard: "Dashboard",
-                upgrade: "Upgrade", viewPricing: "View Pricing", pricingTitle: "Simple, transparent pricing",
+                upgrade: "Upgrade", viewPricing: "See pricing", pricingTitle: "Simple, transparent pricing",
                 myResumes: "My Resumes", createNew: "Create New", manageResumes: "Manage and edit your saved resumes.",
                 personalInfo: "Personal Information", experience: "Experience", education: "Education",
                 skills: "Skills", projects: "Projects",
                 fullName: "Full Name", jobTitle: "Job Title", summary: "Professional Summary",
                 addExperience: "Add Experience", addEducation: "Add Education", addProject: "Add Project",
                 save: "Save", download: "Download", template: "Template:", generateAI: "AI Gen", improveAI: "AI Enhance",
-                company: "Company", role: "Role", startDate: "Start Date", endDate: "End Date", current: "Current", description: "Description"
+                company: "Company", role: "Role", startDate: "Start Date", endDate: "End Date", current: "Current", description: "Description",
+                skipToContent: "Skip to content",
+                heroTitle1: "A resume that reads well", heroTitle2: "to people, and to hiring software.",
+                heroSub: "Fill in your experience once. Get a clean, ATS-friendly resume in minutes — with clear feedback on what to improve and why.",
+                heroNote: "Free to start. No credit card required.",
+                howTitle: "How it works",
+                how1Title: "Add your experience", how1Body: "Answer a short set of questions. Sections you don't need — like projects or volunteering — stay out of your way.",
+                how2Title: "Pick a template", how2Body: "Choose a layout that fits your field. Every template is built to stay readable when printed or scanned.",
+                how3Title: "Check and export", how3Body: "Review your readiness score, fix what's flagged, then download a print-ready PDF.",
+                featTitle: "Everything a job search needs",
+                featAiTitle: "Writing assistance", featAiBody: "Turn a rough draft into clear, action-oriented bullet points — you stay in control of every word.",
+                featAtsTitle: "ATS-friendly structure", featAtsBody: "Standard headings and clean text layout, so applicant tracking systems can read your resume correctly.",
+                featScoreTitle: "Readiness feedback", featScoreBody: "See exactly what's holding your resume back, and why it matters — not just a bare score.",
+                featPdfTitle: "Reliable PDF export", featPdfBody: "What you see is what prints — tested for one-page and multi-page resumes alike.",
+                featTplTitle: "Genuinely different templates", featTplBody: "Not one layout in five colors — each template has its own structure and personality.",
+                featThemeTitle: "Light and dark mode", featThemeBody: "Work comfortably at any hour — the editor adapts, your exported resume always stays print-perfect white.",
+                atsTitle: "Built with ATS in mind",
+                atsBody1: "Most employers screen resumes with applicant tracking software before a person ever sees them. We structure every template with standard section names, clean text order, and safe formatting so that software can parse it correctly.",
+                atsBody2: "No resume can guarantee a 100% pass rate — every ATS is configured differently. What we can promise is a resume that's designed for ATS readability, not one that fights against it.",
+                atsLi1: "Standard, recognizable section headings", atsLi2: "No text trapped inside images or icons",
+                atsLi3: "No multi-column tables that scramble reading order", atsLi4: "Photo is optional, and never required",
+                faqTitle: "Frequently asked questions",
+                faq1Q: "Is my resume really ATS-friendly?", faq1A: "Templates follow ATS-readability best practices — clear headings, linear text, no scrambled columns. No tool can promise 100% compatibility with every system, but nothing here works against you.",
+                faq2Q: "Do I need a profile photo?", faq2A: "No. It's optional on every template, and left out entirely on ATS-friendly ones. Norms around photos vary by market and role — use your judgment.",
+                faq3Q: "What happens to my data?", faq3A: "Your resume is tied to your account and only you can access, edit or delete it. If you're not signed in, it's saved locally in your browser only.",
+                faq4Q: "Can I cancel Premium anytime?", faq4A: "Yes — cancel whenever you like from your account. You keep Premium features until the end of the billing period you already paid for.",
+                finalCtaTitle: "Ready to put your experience into words?", finalCtaBody: "Start free — upgrade only if you need more.",
+                planBasic: "Basic", basicLi1: "Up to 3 resumes", basicLi2: "2 standard templates", basicLi3: "PDF export with watermark",
+                basicLi4: "No AI writing assistance", basicLi5: "No job-description matching",
+                planPro: "Premium", proSub: "Billed monthly. Cancel anytime — no auto-renewal surprises.",
+                proLi1: "Unlimited resumes", proLi2: "All templates", proLi3: "AI writing assistance", proLi4: "Job-description matching", proLi5: "PDF export, no watermark",
+                popular: "POPULAR", currentPlan: "Current plan", upgradeNow: "Upgrade now",
+                checkoutSoon: "Checkout isn't connected yet — no charge was made.",
+                pricingSub: "Start for free. Upgrade only when you need more.",
+                pricingFooterNote: "Prices shown in USD. Taxes may apply depending on your location.",
+                share: "Share", email: "Email", password: "Password", forgotPassword: "Forgot password?",
+                resetSent: "If that email exists, a reset link is on its way.",
+                continueGoogle: "Continue with Google", or: "Or", createAccount: "Create Account",
+                signupConsent: "By continuing you agree to our Terms and Privacy Policy.",
+                shareResume: "Share Resume", shareResumeSub: "Anyone with this link can view your resume.",
+                emptyDashTitle: "No resumes yet", emptyDashBody: "Create your first resume and start applying with confidence.",
+                updated: "Updated",
+                skip: "Skip", back: "Back", continue: "Continue", yes: "Yes", no: "No",
+                obQ1: "What are you creating your resume for?", obQ1Sub: "This just helps us show you relevant tips — nothing else changes.",
+                obStudent: "Student", obGraduate: "Recent graduate", obProfessional: "Working professional", obSwitcher: "Career switcher", obOther: "Other",
+                obQ2: "What role are you aiming for?", obQ2Sub: "Optional — helps tailor suggestions later.", obRolePlaceholder: "e.g. Product Designer",
+                obQ3: "Do you already have a resume?", obQ3Sub: "If you do, you can still start fresh here — nothing is imported automatically.",
+                obDone: "All set — let's build your resume.",
+                jobMatch: "Job Match", jobMatchDesc: "Paste a job description to see how your resume compares.",
+                jobMatchPlaceholder: "Paste the job description here...",
+                jobMatchBtn: "Check match", jobMatchCoverage: "Keyword coverage",
+                jobMatchFoundTitle: "Found in your resume", jobMatchMissingTitle: "Mentioned in the job post, not in your resume",
+                jobMatchMissingNote: "Consider adding these if you genuinely have the experience — don't add skills you don't have.",
+                jobMatchEmpty: "Paste a job description above and click \"Check match\".",
+                jobMatchNeedResume: "Add some skills and experience to your resume first for a meaningful comparison."
             },
             ar: {
                 buildResumeBtn: "أنشئ سيرتك الآن",
@@ -503,7 +771,61 @@
                 fullName: "الاسم الكامل", jobTitle: "المسمى الوظيفي", summary: "الملخص المهني",
                 addExperience: "إضافة خبرة", addEducation: "إضافة تعليم", addProject: "إضافة مشروع",
                 save: "حفظ", download: "تحميل", template: "القالب:", generateAI: "توليد بالذكاء", improveAI: "تحسين بالذكاء",
-                company: "الشركة", role: "الدور", startDate: "تاريخ البدء", endDate: "تاريخ الانتهاء", current: "الحالي", description: "الوصف"
+                company: "الشركة", role: "الدور", startDate: "تاريخ البدء", endDate: "تاريخ الانتهاء", current: "الحالي", description: "الوصف",
+                skipToContent: "الانتقال إلى المحتوى",
+                heroTitle1: "سيرة ذاتية واضحة", heroTitle2: "للبشر، ولأنظمة التوظيف الآلية.",
+                heroSub: "أدخل خبراتك مرة واحدة، واحصل على سيرة ذاتية نظيفة ومتوافقة مع أنظمة التوظيف خلال دقائق — مع ملاحظات واضحة حول ما يجب تحسينه ولماذا.",
+                heroNote: "مجاني للبدء. لا حاجة لبطاقة ائتمان.",
+                howTitle: "كيف يعمل",
+                how1Title: "أضف خبراتك", how1Body: "أجب عن مجموعة قصيرة من الأسئلة. الأقسام التي لا تحتاجها — مثل المشاريع أو التطوع — لن تظهر لك.",
+                how2Title: "اختر قالبًا", how2Body: "اختر تصميمًا يناسب مجالك. كل قالب مصمم ليبقى واضحًا عند الطباعة أو المسح الضوئي.",
+                how3Title: "راجع وصدّر", how3Body: "راجع درجة الجاهزية وأصلح الملاحظات، ثم حمّل ملف PDF جاهزًا للطباعة.",
+                featTitle: "كل ما يحتاجه البحث عن وظيفة",
+                featAiTitle: "مساعدة في الكتابة", featAiBody: "حوّل المسودة الأولية إلى نقاط واضحة تبرز إنجازاتك — وتبقى أنت من يتحكم بكل كلمة.",
+                featAtsTitle: "بنية متوافقة مع الـATS", featAtsBody: "عناوين قياسية وترتيب نص نظيف، حتى تتمكن أنظمة التوظيف من قراءة سيرتك بشكل صحيح.",
+                featScoreTitle: "ملاحظات جاهزية", featScoreBody: "اعرف بالضبط ما الذي يضعف سيرتك الذاتية ولماذا يهم ذلك — وليس مجرد رقم بلا تفسير.",
+                featPdfTitle: "تصدير PDF موثوق", featPdfBody: "ما تراه هو ما يُطبع — تم اختباره على السير القصيرة والطويلة.",
+                featTplTitle: "قوالب مختلفة فعلًا", featTplBody: "ليس تصميمًا واحدًا بخمسة ألوان — لكل قالب بنية وشخصية خاصة به.",
+                featThemeTitle: "وضع فاتح وداكن", featThemeBody: "اعمل بارتياح في أي وقت — المحرر يتكيف، بينما تبقى سيرتك المصدّرة بيضاء ونظيفة للطباعة.",
+                atsTitle: "مصمم مع مراعاة أنظمة التوظيف",
+                atsBody1: "يفحص معظم أصحاب العمل السير الذاتية عبر برامج تتبع المتقدمين قبل أن يراها أي شخص. نبني كل قالب بعناوين أقسام قياسية وترتيب نص واضح وتنسيق آمن حتى تتمكن هذه البرامج من قراءته بشكل صحيح.",
+                atsBody2: "لا يمكن لأي سيرة ذاتية أن تضمن نسبة نجاح 100% — فكل نظام تتبع مُعدّ بشكل مختلف. ما يمكننا الوعد به هو سيرة ذاتية مصممة لتكون سهلة القراءة على هذه الأنظمة، لا أن تعمل ضدها.",
+                atsLi1: "عناوين أقسام قياسية ومعروفة", atsLi2: "لا نص محصور داخل صور أو أيقونات",
+                atsLi3: "لا جداول متعددة الأعمدة تُربك ترتيب القراءة", atsLi4: "الصورة اختيارية دائمًا وغير مطلوبة",
+                faqTitle: "الأسئلة الشائعة",
+                faq1Q: "هل سيرتي الذاتية متوافقة فعلًا مع أنظمة التوظيف؟", faq1A: "تتبع القوالب أفضل ممارسات التوافق مع الـATS — عناوين واضحة، نص خطي، بلا أعمدة مربكة. لا يمكن لأي أداة أن تضمن توافقًا كاملاً مع كل نظام، لكن لا شيء هنا يعمل ضدك.",
+                faq2Q: "هل أحتاج إلى صورة شخصية؟", faq2A: "لا. الصورة اختيارية في كل قالب، وغير موجودة أصلاً في القوالب المتوافقة مع الـATS. تختلف الأعراف حول الصور حسب السوق والوظيفة — استخدم تقديرك الخاص.",
+                faq3Q: "ماذا يحدث لبياناتي؟", faq3A: "سيرتك الذاتية مرتبطة بحسابك، وأنت وحدك من يمكنه الوصول إليها أو تعديلها أو حذفها. إذا لم تكن مسجلاً للدخول، تُحفظ محليًا في متصفحك فقط.",
+                faq4Q: "هل يمكنني إلغاء الاشتراك المدفوع في أي وقت؟", faq4A: "نعم — ألغِ متى شئت من حسابك. تحتفظ بمزايا الاشتراك المدفوع حتى نهاية الفترة التي دفعت مقابلها بالفعل.",
+                finalCtaTitle: "جاهز لتحويل خبراتك إلى كلمات؟", finalCtaBody: "ابدأ مجانًا — وترقَّ فقط عند الحاجة.",
+                planBasic: "أساسي", basicLi1: "حتى 3 سير ذاتية", basicLi2: "قالبان قياسيان", basicLi3: "تصدير PDF بعلامة مائية",
+                basicLi4: "بدون مساعدة كتابة بالذكاء الاصطناعي", basicLi5: "بدون مطابقة الوصف الوظيفي",
+                planPro: "مميز", proSub: "دفع شهري. ألغِ في أي وقت — بلا مفاجآت تجديد تلقائي.",
+                proLi1: "سير ذاتية غير محدودة", proLi2: "جميع القوالب", proLi3: "مساعدة كتابة بالذكاء الاصطناعي", proLi4: "مطابقة الوصف الوظيفي", proLi5: "تصدير PDF بلا علامة مائية",
+                popular: "الأكثر اختيارًا", currentPlan: "الخطة الحالية", upgradeNow: "ترقية الآن",
+                checkoutSoon: "الدفع غير متاح بعد — لم يتم خصم أي مبلغ.",
+                pricingSub: "ابدأ مجانًا. ترقَّ فقط عند الحاجة.",
+                pricingFooterNote: "الأسعار بالدولار الأمريكي. قد تُضاف الضرائب حسب موقعك.",
+                share: "مشاركة", email: "البريد الإلكتروني", password: "كلمة المرور", forgotPassword: "نسيت كلمة المرور؟",
+                resetSent: "إذا كان هذا البريد مسجلاً، سيصلك رابط إعادة التعيين.",
+                continueGoogle: "المتابعة عبر جوجل", or: "أو", createAccount: "إنشاء حساب",
+                signupConsent: "بالمتابعة، أنت توافق على الشروط وسياسة الخصوصية.",
+                shareResume: "مشاركة السيرة الذاتية", shareResumeSub: "يمكن لأي شخص لديه هذا الرابط مشاهدة سيرتك الذاتية.",
+                emptyDashTitle: "لا توجد سير ذاتية بعد", emptyDashBody: "أنشئ سيرتك الذاتية الأولى وابدأ التقديم بثقة.",
+                updated: "آخر تحديث",
+                skip: "تخطي", back: "رجوع", continue: "متابعة", yes: "نعم", no: "لا",
+                obQ1: "لماذا تُنشئ سيرتك الذاتية؟", obQ1Sub: "هذا يساعدنا فقط في عرض نصائح مناسبة لك — لا شيء آخر يتغير.",
+                obStudent: "طالب", obGraduate: "خريج حديث", obProfessional: "موظف حاليًا", obSwitcher: "أغيّر مجالي المهني", obOther: "أخرى",
+                obQ2: "ما الوظيفة التي تستهدفها؟", obQ2Sub: "اختياري — يساعد في تخصيص الاقتراحات لاحقًا.", obRolePlaceholder: "مثال: مصمم منتج",
+                obQ3: "هل لديك سيرة ذاتية بالفعل؟", obQ3Sub: "إذا كان لديك، يمكنك البدء من جديد هنا — لن يتم استيراد أي شيء تلقائيًا.",
+                obDone: "تم! لننشئ سيرتك الذاتية.",
+                jobMatch: "مطابقة الوظيفة", jobMatchDesc: "الصق الوصف الوظيفي لترى مدى تطابق سيرتك الذاتية معه.",
+                jobMatchPlaceholder: "الصق الوصف الوظيفي هنا...",
+                jobMatchBtn: "فحص التطابق", jobMatchCoverage: "نسبة تغطية الكلمات المفتاحية",
+                jobMatchFoundTitle: "موجود في سيرتك الذاتية", jobMatchMissingTitle: "مذكور في الوظيفة، غير موجود في سيرتك",
+                jobMatchMissingNote: "أضف هذه فقط إذا كانت لديك الخبرة فعلًا — لا تُضف مهارات لا تمتلكها.",
+                jobMatchEmpty: "الصق وصف الوظيفة أعلاه واضغط \"فحص التطابق\".",
+                jobMatchNeedResume: "أضف بعض المهارات والخبرات إلى سيرتك الذاتية أولاً للحصول على مقارنة مفيدة."
             }
         };
 
@@ -523,13 +845,16 @@
         // --- UI SERVICE ---
         const UI = {
             init: () => {
-                // Mouse Glow
-                document.addEventListener('mousemove', (e) => {
-                    const glow = document.getElementById('cursor-glow');
-                    gsap.to(glow, { x: e.clientX, y: e.clientY, duration: 0.1, ease: "power2.out" });
-                });
+                // Theme: saved preference > system preference > light (brand default)
+                const savedTheme = localStorage.getItem('app_theme');
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const useDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+                document.documentElement.classList.toggle('dark', useDark);
+                STATE.theme = useDark ? 'dark' : 'light';
+                const icon = document.getElementById('theme-icon');
+                if(icon) icon.className = useDark ? 'ph ph-sun text-xl' : 'ph ph-moon text-xl';
 
-                // Check local storage for theme/lang
+                // Check local storage for language
                 const savedLang = localStorage.getItem('app_lang');
                 if(savedLang) UI.setLanguage(savedLang);
                 
@@ -590,13 +915,14 @@
                 const html = document.documentElement;
                 if(html.classList.contains('dark')) {
                     html.classList.remove('dark');
-                    document.getElementById('theme-icon').className = 'ph ph-sun text-xl';
+                    document.getElementById('theme-icon').className = 'ph ph-moon text-xl';
                     STATE.theme = 'light';
                 } else {
                     html.classList.add('dark');
-                    document.getElementById('theme-icon').className = 'ph ph-moon text-xl';
+                    document.getElementById('theme-icon').className = 'ph ph-sun text-xl';
                     STATE.theme = 'dark';
                 }
+                localStorage.setItem('app_theme', STATE.theme);
             },
 
             setLanguage: (lang) => {
@@ -708,7 +1034,7 @@
                     await createUserWithEmailAndPassword(auth, e, p);
                     UI.hideModal();
                     UI.showToast("Account created", "success");
-                    UI.navigate('dashboard');
+                    Onboarding.maybeShow();
                 } catch(err) { UI.showToast(err.message, "error"); }
             },
             
@@ -718,7 +1044,7 @@
                     await signInWithPopup(auth, provider);
                     UI.hideModal();
                     UI.showToast("Google login successful", "success");
-                    UI.navigate('dashboard');
+                    Onboarding.maybeShow();
                 } catch(err) { UI.showToast(err.message, "error"); }
             },
             
@@ -729,6 +1055,62 @@
                     UI.navigate('landing');
                     UI.showToast("Logged out", "info");
                 } catch(err) { console.error(err); }
+            }
+        };
+
+        // --- ONBOARDING (short, skippable, shown once) ---
+        const Onboarding = {
+            answers: { creating: null, targetRole: '', hasCV: null },
+
+            maybeShow: () => {
+                if(localStorage.getItem('onboarding_seen')) {
+                    UI.navigate('dashboard');
+                    return;
+                }
+                Onboarding.answers = { creating: null, targetRole: '', hasCV: null };
+                Onboarding.goToStep(1);
+                UI.showModal('onboarding-modal');
+            },
+
+            goToStep: (n) => {
+                [1,2,3].forEach(i => {
+                    document.getElementById(`ob-step-${i}`).classList.toggle('hidden', i !== n);
+                    const dot = document.getElementById(`ob-dot-${i}`);
+                    if(dot) {
+                        dot.classList.toggle('bg-indigo-600', i <= n);
+                        dot.style.background = i <= n ? '' : 'var(--border-color)';
+                    }
+                });
+            },
+
+            choose: (key, value) => {
+                Onboarding.answers[key] = value;
+                Onboarding.goToStep(2);
+            },
+
+            step2Next: () => {
+                Onboarding.answers.targetRole = document.getElementById('ob-target-role').value.trim();
+                Onboarding.goToStep(3);
+            },
+
+            back: () => {
+                const current = [1,2,3].find(i => !document.getElementById(`ob-step-${i}`).classList.contains('hidden'));
+                if(current > 1) Onboarding.goToStep(current - 1);
+            },
+
+            finish: (hasCV) => {
+                Onboarding.answers.hasCV = hasCV;
+                localStorage.setItem('onboarding_seen', '1');
+                localStorage.setItem('onboarding_answers', JSON.stringify(Onboarding.answers));
+                UI.hideModal();
+                UI.navigate('dashboard');
+                UI.showToast(Utils.translate('obDone'), 'success');
+            },
+
+            skip: () => {
+                localStorage.setItem('onboarding_seen', '1');
+                UI.hideModal();
+                UI.navigate('dashboard');
             }
         };
 
@@ -819,25 +1201,30 @@
                     { id: 'summary', icon: 'text-align-left', title: Utils.translate('summary') },
                     { id: 'experience', icon: 'briefcase', title: Utils.translate('experience') },
                     { id: 'education', icon: 'graduation-cap', title: Utils.translate('education') },
-                    { id: 'skills', icon: 'lightning', title: Utils.translate('skills') }
+                    { id: 'skills', icon: 'lightning', title: Utils.translate('skills') },
+                    { id: 'jobmatch', icon: 'target', title: Utils.translate('jobMatch') }
                 ];
 
                 sections.forEach(s => {
                     const sectionEl = document.createElement('div');
-                    sectionEl.className = 'glass rounded-xl overflow-hidden border border-white/10';
+                    sectionEl.className = 'surface rounded-xl overflow-hidden';
                     
                     // Header
-                    const header = document.createElement('div');
-                    header.className = 'p-4 flex items-center justify-between cursor-pointer hover:bg-white/5 transition';
+                    const header = document.createElement('button');
+                    header.type = 'button';
+                    header.setAttribute('aria-expanded', 'false');
+                    header.className = 'w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition';
                     header.innerHTML = `
-                        <div class="flex items-center gap-3 font-semibold"><i class="ph ph-${s.icon} text-indigo-400 text-xl"></i> ${s.title}</div>
+                        <div class="flex items-center gap-3 font-semibold"><i class="ph ph-${s.icon} text-indigo-600 text-xl"></i> ${s.title}</div>
                         <i class="ph ph-caret-down transform transition-transform" id="caret-${s.id}"></i>
                     `;
                     
                     // Content Area
                     const content = document.createElement('div');
                     content.id = `content-${s.id}`;
-                    content.className = 'p-4 border-t border-white/10 bg-black/20 hidden space-y-4';
+                    content.className = 'p-4 border-t hidden space-y-4';
+                    content.style.borderColor = 'var(--border-color)';
+                    content.style.background = 'var(--bg-subtle)';
                     
                     // Generate specific form fields based on section
                     content.innerHTML = Builder.getFormHTML(s.id);
@@ -847,10 +1234,12 @@
                         // Close all others
                         document.querySelectorAll('[id^="content-"]').forEach(el => el.classList.add('hidden'));
                         document.querySelectorAll('[id^="caret-"]').forEach(el => el.style.transform = 'rotate(0deg)');
+                        document.querySelectorAll('#builder-accordion button[aria-expanded]').forEach(b => b.setAttribute('aria-expanded', 'false'));
                         
                         if (isHidden) {
                             content.classList.remove('hidden');
                             document.getElementById(`caret-${s.id}`).style.transform = 'rotate(180deg)';
+                            header.setAttribute('aria-expanded', 'true');
                         }
                     };
 
@@ -866,7 +1255,7 @@
                 
                 const inputTemplate = (label, section, field, val, placeholder="", type="text", aiBtn=false) => `
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1 pl-1">${label}</label>
+                        <label class="block text-xs mb-1 pl-1" style="color:var(--text-muted)">${label}</label>
                         <div class="relative">
                             ${type === 'textarea' 
                                 ? `<textarea class="form-input text-sm h-24" placeholder="${placeholder}" onkeyup="Builder.updateData('${section}', '${field}', this.value)">${val}</textarea>`
@@ -903,7 +1292,7 @@
                         html += Builder.getRepeaterItemHTML('experience', idx, exp);
                     });
                     html += `</div>
-                        <button onclick="Builder.addRepeaterItem('experience')" class="w-full py-2 border border-dashed border-white/20 rounded-lg text-sm text-gray-400 hover:bg-white/5 transition flex justify-center items-center gap-2 mt-4"><i class="ph ph-plus"></i> ${tr('addExperience')}</button>`;
+                        <button onclick="Builder.addRepeaterItem('experience')" class="w-full py-2 border border-dashed rounded-lg text-sm hover:bg-black/5 dark:hover:bg-white/5 transition flex justify-center items-center gap-2 mt-4" style="border-color:var(--border-color);color:var(--text-muted)"><i class="ph ph-plus"></i> ${tr('addExperience')}</button>`;
                     return html;
                 }
                 if (type === 'education') {
@@ -912,7 +1301,7 @@
                         html += Builder.getRepeaterItemHTML('education', idx, edu);
                     });
                     html += `</div>
-                        <button onclick="Builder.addRepeaterItem('education')" class="w-full py-2 border border-dashed border-white/20 rounded-lg text-sm text-gray-400 hover:bg-white/5 transition flex justify-center items-center gap-2 mt-4"><i class="ph ph-plus"></i> ${tr('addEducation')}</button>`;
+                        <button onclick="Builder.addRepeaterItem('education')" class="w-full py-2 border border-dashed rounded-lg text-sm hover:bg-black/5 dark:hover:bg-white/5 transition flex justify-center items-center gap-2 mt-4" style="border-color:var(--border-color);color:var(--text-muted)"><i class="ph ph-plus"></i> ${tr('addEducation')}</button>`;
                     return html;
                 }
                 if (type === 'skills') {
@@ -922,6 +1311,16 @@
                         ${inputTemplate('Soft Skills (comma separated)', 'skills', 'soft', data.skills.soft, 'Leadership, Communication', 'textarea')}
                     `;
                 }
+                if (type === 'jobmatch') {
+                    return `
+                        <p class="text-xs mb-3" style="color:var(--text-muted)">${tr('jobMatchDesc')}</p>
+                        <textarea id="jobmatch-input" class="form-input text-sm h-32" placeholder="${tr('jobMatchPlaceholder')}"></textarea>
+                        <button onclick="Builder.analyzeJobMatch()" class="w-full mt-3 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition flex items-center justify-center gap-2">
+                            <i class="ph ph-target"></i> ${tr('jobMatchBtn')}
+                        </button>
+                        <div id="jobmatch-results" class="mt-4 text-sm" style="color:var(--text-muted)">${tr('jobMatchEmpty')}</div>
+                    `;
+                }
                 return '';
             },
 
@@ -929,49 +1328,49 @@
                 const tr = Utils.translate;
                 if(section === 'experience') {
                     return `
-                    <div class="p-3 bg-white/5 rounded-lg border border-white/5 relative group">
-                        <button onclick="Builder.removeRepeaterItem('${section}', ${index})" class="absolute top-2 right-2 text-red-400 opacity-0 group-hover:opacity-100 transition p-1"><i class="ph ph-trash"></i></button>
+                    <div class="p-3 rounded-lg border relative group" style="background:var(--bg-subtle);border-color:var(--border-color)">
+                        <button onclick="Builder.removeRepeaterItem('${section}', ${index})" class="absolute top-2 right-2 text-red-500 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition p-1" aria-label="Remove entry"><i class="ph ph-trash"></i></button>
                         <div class="grid grid-cols-2 gap-3 mb-3">
                             <div>
-                                <label class="block text-[10px] text-gray-400">${tr('company')}</label>
-                                <input type="text" class="w-full bg-transparent border-b border-white/20 text-sm py-1 focus:outline-none focus:border-indigo-500" value="${itemData.company || ''}" onchange="Builder.updateData('${section}', 'company', this.value, ${index})">
+                                <label class="block text-[10px]" style="color:var(--text-muted)">${tr('company')}</label>
+                                <input type="text" class="w-full bg-transparent border-b text-sm py-1 focus:outline-none focus:border-indigo-500" style="border-color:var(--border-color)" value="${itemData.company || ''}" onchange="Builder.updateData('${section}', 'company', this.value, ${index})">
                             </div>
                             <div>
-                                <label class="block text-[10px] text-gray-400">${tr('role')}</label>
-                                <input type="text" class="w-full bg-transparent border-b border-white/20 text-sm py-1 focus:outline-none focus:border-indigo-500" value="${itemData.role || ''}" onchange="Builder.updateData('${section}', 'role', this.value, ${index})">
+                                <label class="block text-[10px]" style="color:var(--text-muted)">${tr('role')}</label>
+                                <input type="text" class="w-full bg-transparent border-b text-sm py-1 focus:outline-none focus:border-indigo-500" style="border-color:var(--border-color)" value="${itemData.role || ''}" onchange="Builder.updateData('${section}', 'role', this.value, ${index})">
                             </div>
                             <div>
-                                <label class="block text-[10px] text-gray-400">${tr('startDate')}</label>
-                                <input type="text" placeholder="MM/YYYY" class="w-full bg-transparent border-b border-white/20 text-sm py-1 focus:outline-none focus:border-indigo-500" value="${itemData.startDate || ''}" onchange="Builder.updateData('${section}', 'startDate', this.value, ${index})">
+                                <label class="block text-[10px]" style="color:var(--text-muted)">${tr('startDate')}</label>
+                                <input type="text" placeholder="MM/YYYY" class="w-full bg-transparent border-b text-sm py-1 focus:outline-none focus:border-indigo-500" style="border-color:var(--border-color)" value="${itemData.startDate || ''}" onchange="Builder.updateData('${section}', 'startDate', this.value, ${index})">
                             </div>
                             <div>
-                                <label class="block text-[10px] text-gray-400">${tr('endDate')}</label>
-                                <input type="text" placeholder="MM/YYYY or Present" class="w-full bg-transparent border-b border-white/20 text-sm py-1 focus:outline-none focus:border-indigo-500" value="${itemData.endDate || ''}" onchange="Builder.updateData('${section}', 'endDate', this.value, ${index})">
+                                <label class="block text-[10px]" style="color:var(--text-muted)">${tr('endDate')}</label>
+                                <input type="text" placeholder="MM/YYYY or Present" class="w-full bg-transparent border-b text-sm py-1 focus:outline-none focus:border-indigo-500" style="border-color:var(--border-color)" value="${itemData.endDate || ''}" onchange="Builder.updateData('${section}', 'endDate', this.value, ${index})">
                             </div>
                         </div>
                         <div class="relative">
-                            <label class="block text-[10px] text-gray-400">${tr('description')}</label>
-                            <textarea class="w-full bg-black/20 rounded p-2 text-xs h-20 border border-white/10 focus:border-indigo-500 outline-none" onchange="Builder.updateData('${section}', 'description', this.value, ${index})">${itemData.description || ''}</textarea>
+                            <label class="block text-[10px]" style="color:var(--text-muted)">${tr('description')}</label>
+                            <textarea class="w-full rounded p-2 text-xs h-20 border focus:border-indigo-500 outline-none" style="background:var(--bg-color);border-color:var(--border-color)" onchange="Builder.updateData('${section}', 'description', this.value, ${index})">${itemData.description || ''}</textarea>
                             <button onclick="AI.improveText(this, '${section}', 'description', ${index})" class="absolute right-2 top-6 p-1 text-[10px] bg-indigo-600/20 text-indigo-400 rounded"><i class="ph-fill ph-magic-wand"></i></button>
                         </div>
                     </div>`;
                 }
                 if(section === 'education') {
                     return `
-                    <div class="p-3 bg-white/5 rounded-lg border border-white/5 relative group">
-                        <button onclick="Builder.removeRepeaterItem('${section}', ${index})" class="absolute top-2 right-2 text-red-400 opacity-0 group-hover:opacity-100 transition p-1"><i class="ph ph-trash"></i></button>
+                    <div class="p-3 rounded-lg border relative group" style="background:var(--bg-subtle);border-color:var(--border-color)">
+                        <button onclick="Builder.removeRepeaterItem('${section}', ${index})" class="absolute top-2 right-2 text-red-500 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition p-1" aria-label="Remove entry"><i class="ph ph-trash"></i></button>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-[10px] text-gray-400">Institution</label>
-                                <input type="text" class="w-full bg-transparent border-b border-white/20 text-sm py-1 focus:outline-none focus:border-indigo-500" value="${itemData.institution || ''}" onchange="Builder.updateData('${section}', 'institution', this.value, ${index})">
+                                <label class="block text-[10px]" style="color:var(--text-muted)">Institution</label>
+                                <input type="text" class="w-full bg-transparent border-b text-sm py-1 focus:outline-none focus:border-indigo-500" style="border-color:var(--border-color)" value="${itemData.institution || ''}" onchange="Builder.updateData('${section}', 'institution', this.value, ${index})">
                             </div>
                             <div>
-                                <label class="block text-[10px] text-gray-400">Degree/Major</label>
-                                <input type="text" class="w-full bg-transparent border-b border-white/20 text-sm py-1 focus:outline-none focus:border-indigo-500" value="${itemData.degree || ''}" onchange="Builder.updateData('${section}', 'degree', this.value, ${index})">
+                                <label class="block text-[10px]" style="color:var(--text-muted)">Degree/Major</label>
+                                <input type="text" class="w-full bg-transparent border-b text-sm py-1 focus:outline-none focus:border-indigo-500" style="border-color:var(--border-color)" value="${itemData.degree || ''}" onchange="Builder.updateData('${section}', 'degree', this.value, ${index})">
                             </div>
                             <div>
-                                <label class="block text-[10px] text-gray-400">Year</label>
-                                <input type="text" class="w-full bg-transparent border-b border-white/20 text-sm py-1 focus:outline-none focus:border-indigo-500" value="${itemData.year || ''}" onchange="Builder.updateData('${section}', 'year', this.value, ${index})">
+                                <label class="block text-[10px]" style="color:var(--text-muted)">Year</label>
+                                <input type="text" class="w-full bg-transparent border-b text-sm py-1 focus:outline-none focus:border-indigo-500" style="border-color:var(--border-color)" value="${itemData.year || ''}" onchange="Builder.updateData('${section}', 'year', this.value, ${index})">
                             </div>
                         </div>
                     </div>`;
@@ -1167,8 +1566,74 @@
                         ` : ''}
                     </div>
                     `;
+                } else if (data.template === 'creative') {
+                    // Creative: colored sidebar with initials mark, distinct from Modern's neutral sidebar
+                    const techSkills = parseSkills(data.skills.technical);
+                    const initials = (data.personal.fullName || 'Y N').trim().split(/\s+/).slice(0,2).map(w => w[0] || '').join('').toUpperCase();
+                    html = `
+                    <div class="flex h-full w-full">
+                        <div class="sidebar w-[38%] p-6 flex flex-col">
+                            <div class="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-xl font-bold mb-4">${initials || 'YN'}</div>
+                            <h1 class="text-xl font-bold leading-tight">${data.personal.fullName || 'Your Name'}</h1>
+                            <h2 class="text-xs opacity-80 mb-6 mt-1 uppercase tracking-wider">${data.personal.title || 'Professional Title'}</h2>
+                            <div class="space-y-2 text-[11px] opacity-90 mb-8">
+                                ${data.personal.email ? `<div class="flex items-center gap-2"><i class="ph-fill ph-envelope"></i> ${data.personal.email}</div>` : ''}
+                                ${data.personal.phone ? `<div class="flex items-center gap-2"><i class="ph-fill ph-phone"></i> ${data.personal.phone}</div>` : ''}
+                                ${data.personal.location ? `<div class="flex items-center gap-2"><i class="ph-fill ph-map-pin"></i> ${data.personal.location}</div>` : ''}
+                                ${data.personal.linkedin ? `<div class="flex items-center gap-2"><i class="ph-fill ph-link"></i> ${data.personal.linkedin}</div>` : ''}
+                            </div>
+                            ${techSkills.length > 0 ? `
+                                <h3 class="text-[11px] font-bold uppercase tracking-widest mb-3 border-b border-white/25 pb-1">Skills</h3>
+                                <div class="flex flex-wrap gap-1">
+                                    ${techSkills.map(s => `<span class="bg-white/15 text-[10px] px-2 py-1 rounded">${s}</span>`).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="w-[62%] p-8 flex flex-col bg-white">
+                            ${data.personal.summary ? `
+                                <div class="mb-6">
+                                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-2">Profile</h3>
+                                    <p class="text-xs text-gray-600 leading-relaxed">${data.personal.summary}</p>
+                                </div>
+                            ` : ''}
+                            ${data.experience.length > 0 ? `
+                                <div class="mb-6">
+                                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4">Experience</h3>
+                                    <div class="space-y-4">
+                                        ${data.experience.map(exp => `
+                                            <div class="relative pl-4 border-l-2" style="border-color:#189B78">
+                                                <div class="flex justify-between items-baseline mb-1">
+                                                    <h4 class="text-sm font-semibold text-gray-800">${exp.role || 'Role'}</h4>
+                                                    <span class="text-[10px] text-gray-500">${exp.startDate || ''} - ${exp.endDate || ''}</span>
+                                                </div>
+                                                <div class="text-xs font-medium mb-1" style="color:#189B78">${exp.company || 'Company'}</div>
+                                                <p class="text-[11px] text-gray-600 leading-relaxed whitespace-pre-line">${exp.description || ''}</p>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${data.education.length > 0 ? `
+                                <div>
+                                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-3">Education</h3>
+                                    <div class="space-y-3">
+                                        ${data.education.map(edu => `
+                                            <div class="flex justify-between items-baseline">
+                                                <div>
+                                                    <h4 class="text-xs font-semibold text-gray-800">${edu.degree || 'Degree'}</h4>
+                                                    <div class="text-[11px] text-gray-600">${edu.institution || 'Institution'}</div>
+                                                </div>
+                                                <span class="text-[10px] text-gray-500">${edu.year || ''}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    `;
                 } else {
-                    // Fallback Developer style (monospaced accents)
+                    // Developer style (monospaced accents) — also the safe fallback for unknown template ids
                      const techSkills = parseSkills(data.skills.technical);
                      html = `
                     <div class="p-8 w-full h-full flex flex-col bg-white text-gray-800">
@@ -1332,13 +1797,13 @@
                 
                 if (STATE.resumes.length === 0) {
                     grid.innerHTML = `
-                        <div class="col-span-full glass p-10 rounded-2xl text-center border border-white/10 flex flex-col items-center">
-                            <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                                <i class="ph ph-file-dashed text-4xl text-gray-500"></i>
+                        <div class="col-span-full surface p-10 rounded-2xl text-center flex flex-col items-center">
+                            <div class="w-20 h-20 rounded-full flex items-center justify-center mb-4" style="background:var(--bg-subtle)">
+                                <i class="ph ph-file-dashed text-4xl" style="color:var(--text-muted)"></i>
                             </div>
-                            <h3 class="text-xl font-bold mb-2">No resumes yet</h3>
-                            <p class="text-gray-400 mb-6 max-w-sm">Create your first AI-powered resume and start landing interviews.</p>
-                            <button onclick="App.createNewResume()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition shadow-lg shadow-indigo-500/20">Create Resume</button>
+                            <h3 class="text-xl font-bold mb-2">${Utils.translate('emptyDashTitle')}</h3>
+                            <p class="mb-6 max-w-sm" style="color:var(--text-muted)">${Utils.translate('emptyDashBody')}</p>
+                            <button onclick="App.createNewResume()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition shadow-lg shadow-indigo-500/20">${Utils.translate('createNew')}</button>
                         </div>
                     `;
                     return;
@@ -1348,18 +1813,21 @@
                 STATE.resumes.forEach(resume => {
                     const date = new Date(resume.updatedAt).toLocaleDateString(STATE.lang === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
                     const card = document.createElement('div');
-                    card.className = 'glass rounded-xl p-5 border border-white/10 hover:border-indigo-500/50 transition-all transform hover:-translate-y-1 group relative cursor-pointer';
+                    card.className = 'surface rounded-xl p-5 transition-all transform hover:-translate-y-1 group relative cursor-pointer';
+                    card.style.borderColor = 'var(--border-color)';
+                    card.onmouseenter = () => card.style.borderColor = '#189B78';
+                    card.onmouseleave = () => card.style.borderColor = 'var(--border-color)';
                     card.innerHTML = `
-                        <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                            <button onclick="event.stopPropagation(); App.deleteResume('${resume.id}')" class="p-1.5 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40" title="Delete"><i class="ph ph-trash"></i></button>
+                        <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity flex gap-1">
+                            <button onclick="event.stopPropagation(); App.deleteResume('${resume.id}')" class="p-1.5 bg-red-500/10 text-red-500 rounded hover:bg-red-500/20" title="Delete" aria-label="Delete resume"><i class="ph ph-trash"></i></button>
                         </div>
-                        <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center mb-4 border border-indigo-500/30">
-                            <i class="ph ph-file-text text-2xl text-indigo-400"></i>
+                        <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-4 border border-indigo-500/25" style="background:var(--bg-subtle)">
+                            <i class="ph ph-file-text text-2xl text-indigo-600"></i>
                         </div>
                         <h3 class="font-bold text-lg mb-1 truncate">${resume.title}</h3>
-                        <p class="text-xs text-gray-400 mb-4 flex items-center gap-1"><i class="ph ph-clock"></i> Updated ${date}</p>
+                        <p class="text-xs mb-4 flex items-center gap-1" style="color:var(--text-muted)"><i class="ph ph-clock"></i> ${Utils.translate('updated')} ${date}</p>
                         <div class="flex items-center gap-2">
-                            <span class="text-[10px] px-2 py-1 rounded bg-white/5 border border-white/10 uppercase">${resume.template}</span>
+                            <span class="text-[10px] px-2 py-1 rounded uppercase" style="background:var(--bg-subtle);border:1px solid var(--border-color)">${resume.template}</span>
                         </div>
                     `;
                     card.onclick = () => App.openResume(resume);
@@ -1410,7 +1878,9 @@
 
         // Expose to window for inline HTML handlers
         window.UI = UI;
+        window.Utils = Utils;
         window.Auth = Auth;
+        window.Onboarding = Onboarding;
         window.Builder = Builder;
         window.App = App;
         window.AI = AI;
