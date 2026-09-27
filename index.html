@@ -128,10 +128,6 @@
             #preview-container, #preview-container * { visibility: visible; }
             #preview-container { position: absolute; inset: 0; box-shadow: none; }
         }
-        @media (max-width: 767px) {
-            .mobile-bottom-nav { display: flex; }
-        }
-        .mobile-bottom-nav { display: none; }
     </style>
 </head>
 <body class="antialiased min-h-screen relative font-sans">
@@ -141,22 +137,21 @@
     <nav class="fixed top-0 w-full z-50 surface border-b px-5 md:px-6 py-3 transition-all duration-300" style="border-color:var(--border-color)">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2.5 cursor-pointer" onclick="UI.navigate('landing')" role="button" tabindex="0" aria-label="ريزوميتك - الصفحة الرئيسية" onkeydown="if(event.key==='Enter')UI.navigate('landing')">
-                <svg width="30" height="30" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <svg width="34" height="34" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <rect width="32" height="32" rx="9" fill="#189B78"/>
-                    <path d="M9.5 17.2L13.6 21.3L22.5 11.4" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-                    <circle cx="24.5" cy="8.5" r="2.5" fill="#E37B22"/>
+                    <text x="16.2" y="23.5" text-anchor="middle" font-family="Tajawal, Cairo, sans-serif" font-weight="800" font-size="19" fill="#ffffff">ر</text>
                 </svg>
-                <span class="font-bold text-xl tracking-tight font-display">ريزوميتك</span>
+                <span class="font-extrabold text-xl tracking-tight font-display">ريزوميتك</span>
             </div>
 
-            <div class="hidden lg:flex items-center gap-1 mx-6">
+            <div class="hidden md:flex items-center gap-1 mx-6">
                 <button onclick="UI.navigate('templates')" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 transition" data-i18n="navTemplates">القوالب</button>
                 <button onclick="UI.navigate('pricing')" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 transition" data-i18n="navPricing">الأسعار</button>
             </div>
 
             <div class="flex items-center gap-1.5">
-                <button onclick="UI.toggleLanguage()" class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors" title="English" aria-label="تبديل اللغة">
-                    <i class="ph ph-translate text-xl"></i>
+                <button onclick="UI.toggleMobileMenu()" class="md:hidden p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors" title="القائمة" aria-label="فتح القائمة">
+                    <i class="ph ph-list text-xl"></i>
                 </button>
                 <button onclick="UI.toggleTheme()" class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors" title="المظهر" aria-label="تبديل الوضع الداكن">
                     <i class="ph ph-moon text-xl" id="theme-icon"></i>
@@ -185,6 +180,12 @@
             </div>
         </div>
     </nav>
+
+    <!-- Mobile nav menu (md:hidden nav links live here) -->
+    <div id="mobile-nav-menu" class="hidden md:!hidden fixed top-[72px] inset-x-0 z-40 surface border-b p-3 flex flex-col gap-1" style="border-color:var(--border-color)">
+        <button onclick="UI.navigate('templates');UI.toggleMobileMenu(true)" class="px-4 py-3 rounded-lg text-sm font-bold text-right hover:bg-black/5 dark:hover:bg-white/10 transition flex items-center gap-2"><i class="ph ph-swatches"></i> <span data-i18n="navTemplates">القوالب</span></button>
+        <button onclick="UI.navigate('pricing');UI.toggleMobileMenu(true)" class="px-4 py-3 rounded-lg text-sm font-bold text-right hover:bg-black/5 dark:hover:bg-white/10 transition flex items-center gap-2"><i class="ph ph-tag"></i> <span data-i18n="navPricing">الأسعار</span></button>
+    </div>
 
     <main id="main-content" class="pt-[72px] min-h-screen">
 
@@ -507,7 +508,7 @@
                 </div>
 
                 <!-- Footer actions -->
-                <div class="absolute bottom-0 right-0 w-full p-3 border-t shrink-0 flex justify-between gap-2 mb-14 md:mb-0" style="border-color:var(--border-color);background:var(--bg-color)">
+                <div class="absolute bottom-0 right-0 w-full p-3 border-t shrink-0 flex justify-between gap-2" style="border-color:var(--border-color);background:var(--bg-color);padding-bottom:calc(.75rem + env(safe-area-inset-bottom,0px))">
                     <button onclick="Builder.saveResume()" class="flex-1 py-2.5 surface hover:bg-black/5 dark:hover:bg-white/10 rounded-lg font-medium transition flex items-center justify-center gap-2 text-sm">
                         <i class="ph ph-floppy-disk"></i> <span data-i18n="save">حفظ</span>
                     </button>
@@ -531,15 +532,17 @@
                 <div class="h-20 shrink-0"></div>
             </div>
 
-            <!-- Mobile bottom navigation -->
-            <div class="mobile-bottom-nav md:hidden fixed bottom-0 inset-x-0 z-40 surface border-t items-stretch" style="border-color:var(--border-color);padding-bottom:env(safe-area-inset-bottom,0px)">
-                <button onclick="UI.setBuilderTab('data')" class="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-[11px] font-bold mob-tab-btn" data-mtab="data"><i class="ph ph-note-pencil text-lg"></i>البيانات</button>
-                <button onclick="UI.setBuilderTab('design')" class="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-[11px] font-bold mob-tab-btn" data-mtab="design"><i class="ph ph-palette text-lg"></i>التصميم</button>
-                <button onclick="UI.toggleMobilePreview()" class="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-[11px] font-bold" style="color:var(--text-muted)"><i class="ph ph-eye text-lg"></i>معاينة</button>
-                <button onclick="UI.setBuilderTab('evaluate')" class="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-[11px] font-bold mob-tab-btn" data-mtab="evaluate"><i class="ph ph-gauge text-lg"></i>التقييم</button>
-            </div>
+            <!-- Mobile: a single floating action reveals the live preview. Switching between
+                 data / design / evaluate already works on mobile via the tab strip above the
+                 form (same element used on desktop) — a second, duplicate bottom nav for the
+                 same three tabs was confusing and it also collided with the save/download bar,
+                 so it has been replaced with this one unambiguous action. -->
+            <button onclick="UI.toggleMobilePreview()" class="md:hidden fixed z-40 rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 flex items-center gap-2 px-5 py-3 font-bold text-sm" style="bottom:calc(4.75rem + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%)">
+                <i class="ph ph-eye text-lg"></i> معاينة السيرة الذاتية
+            </button>
 
-            <div id="mobile-preview-panel" class="fixed inset-0 z-40 flex-col overflow-y-auto pt-20 pb-10 items-center hidden" style="background:var(--bg-color)">
+            <div id="mobile-preview-panel" class="fixed inset-0 z-40 flex-col overflow-y-auto pt-6 pb-10 items-center hidden" style="background:var(--bg-color);padding-top:calc(1.5rem + env(safe-area-inset-top,0px))">
+                <button onclick="UI.toggleMobilePreview()" class="mb-4 px-4 py-2 rounded-full surface font-bold text-sm flex items-center gap-2"><i class="ph ph-x"></i> إغلاق المعاينة</button>
                 <div id="mobile-preview-container" class="a4-container scale-90 origin-top"></div>
             </div>
 
@@ -802,7 +805,7 @@
         const TPL_MAP = Object.fromEntries(TEMPLATES.map(t => [t.id, t]));
 
         const FILTERS = [
-            { id: 'all', label: 'الكل' }, { id: 'free', label: 'مجاني' }, { id: 'premium', label: 'Premium' },
+            { id: 'all', label: 'الكل' }, { id: 'free', label: 'مجاني' }, { id: 'premium', label: 'مميز' },
             { id: 'ats', label: 'ATS-friendly' }, { id: 'modern', label: 'حديث' }, { id: 'official', label: 'رسمي' },
             { id: 'executive', label: 'تنفيذي' }, { id: 'academic', label: 'أكاديمي' }, { id: 'tech', label: 'تقني' },
             { id: 'creative', label: 'إبداعي' }, { id: 'grad', label: 'لحديثي التخرج' },
@@ -812,11 +815,11 @@
         // --- CURRENCY / PRICING (indicative figures — replace with real market pricing
         // and a payment provider before charging real customers) ---
         const CURRENCIES = {
-            EGP: { symbol: 'ج.م', monthly: 249, yearly: 2490 },
-            SAR: { symbol: 'ر.س', monthly: 39,  yearly: 390 },
-            AED: { symbol: 'د.إ', monthly: 39,  yearly: 390 },
-            SDG: { symbol: 'ج.س', monthly: 6500, yearly: 65000 },
-            USD: { symbol: '$',   monthly: 9,   yearly: 90 },
+            EGP: { name: 'جنيه مصري', symbol: 'ج.م', monthly: 249, yearly: 2490 },
+            SAR: { name: 'ريال سعودي', symbol: 'ر.س', monthly: 39,  yearly: 390 },
+            AED: { name: 'درهم إماراتي', symbol: 'د.إ', monthly: 39,  yearly: 390 },
+            SDG: { name: 'جنيه سوداني', symbol: 'ج.س', monthly: 6500, yearly: 65000 },
+            USD: { name: 'دولار أمريكي', symbol: '$',   monthly: 9,   yearly: 90 },
         };
         const COUNTRY_CURRENCY = { EG: 'EGP', SA: 'SAR', AE: 'AED', SD: 'SDG' };
 
@@ -1170,8 +1173,10 @@
                 const icon = document.getElementById('theme-icon');
                 if (icon) icon.className = useDark ? 'ph ph-sun text-xl' : 'ph ph-moon text-xl';
 
-                const savedLang = localStorage.getItem('app_lang') || 'ar';
-                UI.setLanguage(savedLang, true);
+                // The platform is Arabic-only by design (see product notes) — no language
+                // toggle is exposed in the UI, and this stays pinned to 'ar' regardless of
+                // any stale 'app_lang' value a browser may have stored from an older build.
+                UI.setLanguage('ar', true);
 
                 STATE.currency = localStorage.getItem('app_currency') || Utils.detectCurrency();
                 UI.populateCurrencySelect();
@@ -1256,6 +1261,12 @@
                 }
             },
 
+            toggleMobileMenu: (forceClose) => {
+                const menu = document.getElementById('mobile-nav-menu');
+                const shouldHide = forceClose || !menu.classList.contains('hidden');
+                menu.classList.toggle('hidden', shouldHide);
+            },
+
             toggleMobilePreview: () => {
                 const panel = document.getElementById('mobile-preview-panel');
                 const isHidden = panel.classList.contains('hidden');
@@ -1279,7 +1290,6 @@
                     b.style.borderColor = on ? '#189B78' : 'transparent';
                     b.style.color = on ? '#189B78' : 'var(--text-muted)';
                 });
-                document.querySelectorAll('.mob-tab-btn').forEach(b => { b.style.color = b.dataset.mtab === tab ? '#189B78' : 'var(--text-muted)'; });
                 if (tab === 'evaluate') Evaluator.run();
                 if (tab === 'design') Builder.renderDesignTab();
             },
@@ -1296,7 +1306,7 @@
 
             populateCurrencySelect: () => {
                 const sel = document.getElementById('currency-select');
-                sel.innerHTML = Object.keys(CURRENCIES).map(c => `<option value="${c}" ${c===STATE.currency?'selected':''}>${c}</option>`).join('');
+                sel.innerHTML = Object.entries(CURRENCIES).map(([c, v]) => `<option value="${c}" ${c===STATE.currency?'selected':''}>${v.name}</option>`).join('');
             },
             setCurrency: (c) => { STATE.currency = c; localStorage.setItem('app_currency', c); UI.renderPricing(); },
 
@@ -1363,14 +1373,27 @@
                 grid.innerHTML = list.map(t => `
                     <div class="surface rounded-xl overflow-hidden cursor-pointer group transition hover:-translate-y-0.5" onclick="Templates.showPreview('${t.id}')">
                         <div class="tpl-thumb">
-                            <div class="tpl-thumb-scale" style="width:800px;height:1131px;transform:scale(0.155) translate(0,0)" dir="rtl">${TemplateRenderer.thumbHTML(t.id)}</div>
-                            ${t.premium ? `<div class="absolute top-2 left-2 bg-black/70 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1"><i class="ph-fill ph-lock-simple"></i> Premium</div>` : `<div class="absolute top-2 left-2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded-full">مجاني</div>`}
+                            <div class="tpl-thumb-scale" style="width:800px;height:1131px" dir="rtl">${TemplateRenderer.thumbHTML(t.id)}</div>
+                            ${t.premium ? `<div class="absolute top-2 left-2 bg-black/70 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1"><i class="ph-fill ph-lock-simple"></i> مميز</div>` : `<div class="absolute top-2 left-2 bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded-full">مجاني</div>`}
                         </div>
                         <div class="p-3">
                             <h4 class="font-bold text-sm mb-0.5">${t.name}</h4>
                             <p class="text-[11px] truncate" style="color:var(--text-muted)">${FILTERS.find(f=>f.id===t.tags[0])?.label || ''}</p>
                         </div>
                     </div>`).join('') || `<div class="col-span-full text-center py-16" style="color:var(--text-muted)">لا توجد قوالب مطابقة لهذا التصنيف.</div>`;
+                requestAnimationFrame(Templates.fitThumbs);
+            },
+
+            // Thumbnails are rendered full-size (800x1131) then scaled down visually — the scale
+            // factor must match each card's actual measured width so it looks right at every grid
+            // breakpoint (2 cols on phones, 3 on tablets, 4 on desktop), not just one fixed size.
+            fitThumbs: () => {
+                document.querySelectorAll('.tpl-thumb').forEach(thumb => {
+                    const scaleEl = thumb.querySelector('.tpl-thumb-scale');
+                    const w = thumb.clientWidth;
+                    if (!scaleEl || !w) return;
+                    scaleEl.style.transform = `scale(${(w / 800).toFixed(4)})`;
+                });
             },
 
             showPreview: (id) => {
@@ -1397,7 +1420,7 @@
                     cta.innerHTML = `<button onclick="Templates.useTemplate('${id}')" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition text-sm">استخدام هذا القالب</button>`;
                 } else {
                     cta.innerHTML = `
-                        <p class="text-xs surface rounded-lg p-3" style="color:var(--text-muted)">هذا القالب Premium. يمكنك تجربته الآن مجانًا — لكن ملف الـPDF المُصدَّر سيحمل علامة مائية خفيفة حتى تتم الترقية.</p>
+                        <p class="text-xs surface rounded-lg p-3" style="color:var(--text-muted)">هذا قالب مميز ضمن الباقة الاحترافية. يمكنك تجربته الآن مجانًا — لكن ملف الـPDF المُصدَّر سيحمل علامة مائية خفيفة حتى تتم الترقية.</p>
                         <button onclick="Templates.useTemplate('${id}')" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition text-sm">تجربة هذا القالب</button>
                         <button onclick="UI.hideModal();UI.navigate('pricing')" class="w-full py-2.5 surface rounded-lg font-bold transition text-sm">عرض الخطط</button>`;
                 }
@@ -1696,13 +1719,13 @@
             renderDesignTab: () => {
                 const r = STATE.currentResume; if (!r) return;
                 const tpl = TPL_MAP[r.template];
-                document.getElementById('current-template-name').textContent = tpl.name + (tpl.premium ? ' (Premium)' : '');
-                document.getElementById('current-template-thumb').innerHTML = `<div style="width:200px;height:283px;transform:scale(0.24);transform-origin:top right" dir="rtl">${TemplateRenderer.render(r,true)}</div>`;
+                document.getElementById('current-template-name').textContent = tpl.name + (tpl.premium ? ' (مميز)' : '');
+                document.getElementById('current-template-thumb').innerHTML = `<div style="width:800px;height:1131px;transform:scale(0.06);transform-origin:top right" dir="rtl">${TemplateRenderer.render(r,true)}</div>`;
 
                 document.getElementById('color-swatches-primary').innerHTML = COLORS.map(c => `<button class="swatch ${r.style.color===c.hex?'active':''}" style="background:${c.hex}" title="${c.id}" onclick="Builder.updateStyle('color','${c.hex}')"></button>`).join('');
 
                 const fontSel = document.getElementById('font-select');
-                fontSel.innerHTML = FONTS.map(f => `<option value="${f.id}" ${r.style.font===f.id?'selected':''} ${f.premium && STATE.userPlan!=='pro' ? '' : ''}>${f.label}${f.premium?' (Premium)':''}</option>`).join('');
+                fontSel.innerHTML = FONTS.map(f => `<option value="${f.id}" ${r.style.font===f.id?'selected':''}>${f.label}${f.premium?' (مميز)':''}</option>`).join('');
 
                 document.getElementById('font-size-range').value = r.style.scale ?? 1;
                 document.getElementById('font-size-label').textContent = ['صغير','متوسط','كبير'][r.style.scale ?? 1];
@@ -2077,6 +2100,7 @@
         window.UI = UI; window.Utils = Utils; window.Auth = Auth; window.Builder = Builder;
         window.App = App; window.AI = AI; window.Templates = Templates; window.Evaluator = Evaluator;
 
+        window.addEventListener('resize', Utils.debounce(() => Templates.fitThumbs(), 150));
         window.onload = App.init;
     </script>
 </body>
