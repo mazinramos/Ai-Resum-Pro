@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>حذف الحساب والبيانات — سيرتي (Seerti)</title>
+<meta name="description" content="كيف تحذف حسابك وسيرك الذاتية من تطبيق سيرتي نهائيًا: من التطبيق، أو من هذه الصفحة، أو بالبريد.">
+<script>try{var t=localStorage.getItem('app_theme');if(t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.classList.add('dark')}catch(e){}</script>
+<link rel="stylesheet" href="vendor/fonts/cairo/400.css">
+<link rel="stylesheet" href="vendor/fonts/cairo/700.css">
+<link rel="stylesheet" href="vendor/fonts/cairo/800.css">
+<link rel="stylesheet" href="legal.css">
+</head>
+<body>
+<header class="top"><div>
+  <a class="brand" href="index.html" aria-label="سيرتي">
+    <svg viewBox="0 0 200 200" aria-hidden="true"><rect width="200" height="200" rx="52" fill="#189B78"/><rect x="70" y="95" width="20" height="42" rx="6" fill="#D7F1E7"/><rect x="98" y="72" width="20" height="65" rx="6" fill="#fff"/><rect x="126" y="45" width="20" height="92" rx="6" fill="#0A4033"/><path d="M42 146 Q100 184 158 146" fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round"/></svg>
+    <span>سيرتي</span></a>
+  <a class="back" href="index.html">العودة إلى التطبيق</a>
+</div></header>
+
+<main>
+<h1>حذف الحساب والبيانات</h1>
+<div class="meta"><span class="chip">تطبيق سيرتي (Seerti)</span><span class="chip">آخر تحديث: 28 سبتمبر 2026</span></div>
+<p>تشرح هذه الصفحة كيف تحذف حسابك في سيرتي وكل البيانات المرتبطة به. لا تحتاج إلى تثبيت التطبيق لتنفيذ الحذف.</p>
+
+<div class="box dng"><h3>الحذف نهائي ولا يمكن التراجع عنه</h3>
+<p>بعد الحذف لن تستطيع استعادة حسابك أو سيرك الذاتية. نوصي بتنزيل ما تحتاجه بصيغة PDF قبل المتابعة.</p></div>
+
+<section><h2>ماذا يُحذف وماذا يبقى؟</h2>
+<div class="tw"><table>
+<tr><th>البيانات</th><th>النتيجة</th></tr>
+<tr><td>حساب Firebase Authentication (البريد الإلكتروني ومعرّف المستخدم وبيانات تسجيل الدخول)</td><td>يُحذف</td></tr>
+<tr><td>كل سيرك الذاتية المحفوظة في Cloud Firestore</td><td>تُحذف</td></tr>
+<tr><td>النسخة المؤقتة من سيرك المخزّنة على هذا الجهاز</td><td>تُحذف عند الحذف من التطبيق أو من هذه الصفحة</td></tr>
+<tr><td>بيانات وضع الضيف ومتتبّع الوظائف على أجهزتك</td><td>لا تخصّ الحساب ولا تصل إلينا؛ تبقى حتى تمسحها بزر «مسح بيانات هذا الجهاز» أدناه</td></tr>
+<tr><td>نسخ Google الاحتياطية</td><td>قد تبقى لفترة محدودة قبل إزالتها نهائيًا من بنية Google</td></tr>
+</table></div>
+<p>لا نحتفظ بأي بيانات أخرى عنك لالتزامات قانونية، إذ لا نجمع سوى ما هو موضّح في <a href="privacy-policy.html">سياسة الخصوصية</a>.</p></section>
+
+<section><h2>الطريقة 1: من داخل التطبيق</h2>
+<ol><li>سجّل الدخول إلى حسابك.</li><li>افتح قائمة الحساب: أيقونة الحساب في أعلى الشاشة، أو قائمة ☰ في الجوال.</li><li>اختر «حذف الحساب والبيانات».</li><li>أدخل كلمة المرور، وأكّد أنك تفهم أن الحذف نهائي، ثم اضغط «حذف حسابي نهائيًا».</li></ol></section>
+
+<section id="web"><h2>الطريقة 2: من هذه الصفحة</h2>
+<noscript><div class="box warn"><p>يحتاج نموذج الحذف المباشر إلى تفعيل JavaScript. يمكنك استخدام الطريقة 1 أو الطريقة 3.</p></div></noscript>
+<form id="del-form" novalidate>
+  <label for="em">البريد الإلكتروني</label>
+  <input id="em" type="email" autocomplete="email" dir="ltr" required>
+  <label for="pw">كلمة المرور</label>
+  <input id="pw" type="password" autocomplete="current-password" dir="ltr" required>
+  <label style="display:flex;gap:10px;align-items:flex-start;font-weight:400;margin-top:16px"><input id="ok" type="checkbox" style="margin-top:8px;width:20px;height:20px">
+    <span>أفهم أن حذف حسابي وسيري الذاتية نهائي ولا يمكن التراجع عنه.</span></label>
+  <p style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px">
+    <button class="btn dng" id="go" type="submit" disabled>حذف حسابي نهائيًا</button>
+    <button class="btn ghost" id="go-g" type="button" disabled>لديّ حساب جوجل</button></p>
+  <p class="st" id="st" role="status" aria-live="polite"></p>
+</form>
+<p style="font-size:.9rem;color:var(--mu)">إذا سجّلت بحساب جوجل فاضغط «لديّ حساب جوجل» وأكّد هويتك في النافذة التي تظهر.</p></section>
+
+<section><h2>الطريقة 3: بالبريد الإلكتروني</h2>
+<p>إن تعذّر عليك الدخول إلى حسابك، راسلنا من البريد المسجّل في الحساب على <a href="mailto:mazinflwo.dev@gmail.com?subject=طلب حذف حساب سيرتي">mazinflwo.dev@gmail.com</a> بعنوان «طلب حذف حساب»، وسننفّذ الحذف بعد التحقق من ملكيتك للبريد.</p></section>
+
+<section><h2>حذف سيرة واحدة فقط</h2>
+<p>يمكنك حذف أي سيرة من لوحتك في التطبيق دون حذف حسابك.</p></section>
+
+<section><h2>مسح بيانات هذا الجهاز</h2>
+<p>يمسح هذا الزر بيانات وضع الضيف ومتتبّع الوظائف والتفضيلات المحفوظة على هذا الجهاز أو المتصفح فقط، ولا يؤثر في حسابك السحابي.</p>
+<p><button class="btn ghost" id="wipe" type="button">مسح بيانات هذا الجهاز</button> <span class="st" id="wst" role="status" aria-live="polite"></span></p></section>
+</main>
+
+<footer>
+<span>© سيرتي — جميع الحقوق محفوظة</span>
+<nav><a href="privacy-policy.html">سياسة الخصوصية</a> · <a href="delete-account.html">حذف الحساب</a> · <a href="index.html">التطبيق</a></nav>
+</footer>
+
+<script type="module">
+import { clearLocalData, deleteAccountAndData, deleteErrorMessage } from './account-deletion.js';
+const $ = id => document.getElementById(id), st = $('st');
+const CFG = { apiKey: "AIzaSyCUpCvEgn7aOBY2y18JfErBWvatPxaInUI", authDomain: "seerti-3e74a.firebaseapp.com", projectId: "seerti-3e74a",
+  storageBucket: "seerti-3e74a.firebasestorage.app", messagingSenderId: "830828499665", appId: "1:830828499665:web:9acf5484bd94a0d1afebf0" };
+const APP_ID = 'resumatic-default';   // must match the appId used by index.html for Firestore paths
+const say = (m, c) => { st.textContent = m; st.className = 'st ' + (c || ''); };
+let fb;
+try {
+  const imp = n => import('./vendor/firebase/' + n + '.js');
+  const [app, auth, fs] = await Promise.all([imp('firebase-app'), imp('firebase-auth'), imp('firebase-firestore')]);
+  const a = app.initializeApp(CFG);
+  fb = { auth: auth.getAuth(a), db: fs.getFirestore(a), signIn: auth.signInWithEmailAndPassword, signInPopup: auth.signInWithPopup, signOut: auth.signOut,
+    EmailAuthProvider: auth.EmailAuthProvider, GoogleAuthProvider: auth.GoogleAuthProvider, reauthenticateWithCredential: auth.reauthenticateWithCredential,
+    reauthenticateWithPopup: auth.reauthenticateWithPopup, deleteUser: auth.deleteUser, collection: fs.collection, getDocs: fs.getDocs, writeBatch: fs.writeBatch };
+} catch (e) { say('تعذّر تحميل خدمة الحذف. استخدم الطريقة 1 أو الطريقة 3.', 'err'); }
+const sync = () => { const on = !!fb && $('ok').checked; $('go').disabled = !on; $('go-g').disabled = !on; };
+$('ok').addEventListener('change', sync); sync();
+async function run(signInFn, opts) {
+  $('go').disabled = $('go-g').disabled = true; say('جارٍ الحذف… لا تغلق الصفحة.');
+  try {
+    await signInFn();
+    const r = await deleteAccountAndData(fb, Object.assign({ appId: APP_ID, recentLogin: true }, opts));
+    $('del-form').reset(); say('تم حذف حسابك و' + (r.deletedResumes || 0) + ' من سيرك الذاتية نهائيًا.', 'ok');
+  } catch (e) {
+    say(deleteErrorMessage(e), 'err');
+    try { if (fb.auth.currentUser) await fb.signOut(fb.auth); } catch (_) {}
+  }
+  sync();
+}
+$('del-form').addEventListener('submit', ev => {
+  ev.preventDefault();
+  const email = $('em').value.trim(), pw = $('pw').value;
+  if (!email || !pw) return say('أدخل البريد الإلكتروني وكلمة المرور.', 'err');
+  run(() => fb.signIn(fb.auth, email, pw), {});
+});
+$('go-g').addEventListener('click', () => run(() => fb.signInPopup(fb.auth, new fb.GoogleAuthProvider()), {}));
+$('wipe').addEventListener('click', () => {
+  if (!confirm('سيُمسح كل ما هو محفوظ على هذا الجهاز من بيانات الضيف والوظائف والتفضيلات. هل تريد المتابعة؟')) return;
+  clearLocalData(); $('wst').textContent = 'تم المسح.'; $('wst').className = 'st ok';
+});
+</script>
+</body>
+</html>
