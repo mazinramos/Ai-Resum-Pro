@@ -111,6 +111,11 @@
            literal, useful metaphor for the product (messy input -> structure),
            built from flat shapes + GSAP timing, matching the flat surface system. */
         .hero-stage { position: relative; width: 100%; aspect-ratio: 4/3; max-width: 460px; }
+        .hero-chip { max-width: 100%; }
+        .icon-btn, .icon-btn:hover, .icon-btn:active, .icon-btn:focus { background: transparent !important; box-shadow: none; -webkit-tap-highlight-color: transparent; }
+        .icon-btn:focus-visible { outline: 2px solid #189B78; outline-offset: 2px; border-radius: 8px; }
+        html { overflow-x: hidden; }
+        #main-content, #view-landing { overflow-x: clip; }
         .hero-doc { position: absolute; inset: 0; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; box-shadow: 0 16px 40px -20px rgba(20,32,28,.4); padding: 22px; overflow: hidden; }
         .hero-doc .hd-line { height: 8px; border-radius: 4px; background: var(--surface-2); margin-bottom: 10px; }
         .hero-chip { position: absolute; font-size: 11px; font-weight: 700; padding: 6px 10px; border-radius: 8px; background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border-color); white-space: nowrap; }
@@ -242,10 +247,10 @@
             </div>
 
             <div class="flex items-center gap-0.5 sm:gap-1.5 shrink-0">
-                <button onclick="UI.toggleMobileMenu()" class="md:hidden p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors" title="القائمة" aria-label="فتح القائمة">
+                <button onclick="UI.toggleMobileMenu()" class="icon-btn md:hidden p-2" title="القائمة" aria-label="فتح القائمة">
                     <i class="ph ph-list text-xl"></i>
                 </button>
-                <button onclick="UI.toggleTheme()" class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors" title="المظهر" aria-label="تبديل الوضع الداكن">
+                <button onclick="UI.toggleTheme()" class="icon-btn p-2" title="المظهر" aria-label="تبديل الوضع الداكن">
                     <i class="ph ph-moon text-xl" id="theme-icon"></i>
                 </button>
 
@@ -612,6 +617,8 @@
                         </div>
                         <div>
                             <h4 class="text-xs font-bold mb-2" style="color:var(--text-muted)" data-i18n="dsgnPrimaryColor">اللون الأساسي</h4>
+                            <div class="grid grid-cols-2 gap-1.5 mb-3" id="color-mode-options"></div>
+                            <div id="advanced-color-options" class="space-y-2 mb-3 hidden"></div>
                             <div id="color-swatches-primary" class="space-y-2.5 mb-3"></div>
                             <h5 class="text-[11px] font-bold mb-1.5" style="color:var(--text-muted)" data-i18n="dsgnApplyAccent">تطبيق اللون على</h5>
                             <div class="grid grid-cols-2 gap-x-3 gap-y-1.5" id="accent-target-options"></div>
@@ -1349,7 +1356,7 @@
         // --- TEMPLATE RENDERER: one generic engine driven by family + style tokens ---
         const TemplateRenderer = {
             heading: (text, style) => {
-                const c = style.color;
+                const c = accentColor(style, 'headings');
                 const accentOn = !style.accent || style.accent.headings !== false;
                 if (style.heading === 'block') return `<div style="background:${accentOn ? c : '#14201C'};color:#fff;padding:4px 10px;border-radius:4px;display:inline-block;font-weight:700;font-size:.78em;letter-spacing:.02em;margin-bottom:8px">${text}</div>`;
                 if (style.heading === 'simple') return `<div style="font-weight:800;font-size:.78em;letter-spacing:.04em;color:${accentOn ? c : '#14201C'};margin-bottom:6px;text-transform:uppercase">${text}</div>`;
@@ -1366,12 +1373,12 @@
                     const accentDates = style.accent && style.accent.dates;
                     const accentSub = style.accent && style.accent.subtitle;
                     const nextLine = style.subtitlePlacement === 'next';
-                    const whoInline = (who && !nextLine) ? `<span style="${subCss};${accentSub?`color:${style.color}`:''}"> — ${Utils.escapeHtml(who)}</span>` : '';
-                    const whoBelow = (who && nextLine) ? `<div style="font-size:.78em;margin-top:1px;${subCss};${accentSub?`color:${style.color}`:'color:#5B6B65'}">${Utils.escapeHtml(who)}</div>` : '';
+                    const whoInline = (who && !nextLine) ? `<span style="${subCss};${accentSub?`color:${accentColor(style,'subtitle')}`:''}"> — ${Utils.escapeHtml(who)}</span>` : '';
+                    const whoBelow = (who && nextLine) ? `<div style="font-size:.78em;margin-top:1px;${subCss};${accentSub?`color:${accentColor(style,'subtitle')}`:'color:#5B6B65'}">${Utils.escapeHtml(who)}</div>` : '';
                     return `<div style="margin-bottom:10px">
                         <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap">
                             <span style="font-weight:700;font-size:${roleSize}em">${Utils.escapeHtml(it.role||'')}${whoInline}</span>
-                            <span style="font-size:.68em;color:${accentDates ? style.color : '#5B6B65'};white-space:nowrap">${Utils.escapeHtml(it.startDate||'')} – ${Utils.escapeHtml(it.endDate||'')}</span>
+                            <span style="font-size:.68em;color:${accentDates ? accentColor(style,'dates') : '#5B6B65'};white-space:nowrap">${Utils.escapeHtml(it.startDate||'')} – ${Utils.escapeHtml(it.endDate||'')}</span>
                         </div>
                         ${whoBelow}
                         ${it.description ? `<p style="font-size:.78em;color:#3A4A54;margin-top:3px;line-height:1.65">${Utils.escapeHtml(it.description)}</p>` : ''}
@@ -1383,8 +1390,8 @@
                     const eNext = style.subtitlePlacement === 'next';
                     const eAccSub = style.accent && style.accent.subtitle;
                     const eAccDate = style.accent && style.accent.dates;
-                    const inst = it.institution ? `<span style="${eSub};${eAccSub ? `color:${style.color}` : ''}">${eNext ? '' : ' — '}${Utils.escapeHtml(it.institution)}</span>` : '';
-                    return `<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;flex-wrap:wrap"><span style="font-weight:700;font-size:${eSizeMap[style.titleSize] || eSizeMap.m}em">${Utils.escapeHtml(it.degree||'')}${eNext ? '' : inst}</span><span style="font-size:.68em;color:${eAccDate ? style.color : '#5B6B65'}">${Utils.escapeHtml(it.year||'')}</span></div>${eNext ? `<div style="font-size:.78em;margin-top:1px;${it.institution ? '' : 'display:none;'}${eSub};${eAccSub ? `color:${style.color}` : 'color:#5B6B65'}">${Utils.escapeHtml(it.institution||'')}</div>` : ''}</div>`;
+                    const inst = it.institution ? `<span style="${eSub};${eAccSub ? `color:${accentColor(style,'subtitle')}` : ''}">${eNext ? '' : ' — '}${Utils.escapeHtml(it.institution)}</span>` : '';
+                    return `<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;flex-wrap:wrap"><span style="font-weight:700;font-size:${eSizeMap[style.titleSize] || eSizeMap.m}em">${Utils.escapeHtml(it.degree||'')}${eNext ? '' : inst}</span><span style="font-size:.68em;color:${eAccDate ? accentColor(style,'dates') : '#5B6B65'}">${Utils.escapeHtml(it.year||'')}</span></div>${eNext ? `<div style="font-size:.78em;margin-top:1px;${it.institution ? '' : 'display:none;'}${eSub};${eAccSub ? `color:${accentColor(style,'subtitle')}` : 'color:#5B6B65'}">${Utils.escapeHtml(it.institution||'')}</div>` : ''}</div>`;
                 }
                 if (kind === 'certifications') return `<div style="margin-bottom:6px;font-size:.82em"><b>${Utils.escapeHtml(it.name||'')}</b>${it.issuer ? ' — ' + Utils.escapeHtml(it.issuer) : ''} <span style="color:#5B6B65;font-size:.85em">${Utils.escapeHtml(it.year||'')}</span></div>`;
                 if (kind === 'projects') return `<div style="margin-bottom:9px"><span style="font-weight:700;font-size:.84em">${Utils.escapeHtml(it.name||'')}</span>${it.role ? ' — <span style="font-size:.75em;color:#5B6B65">'+Utils.escapeHtml(it.role)+'</span>' : ''}${it.description ? `<p style="font-size:.78em;color:#3A4A54;margin-top:2px;line-height:1.6">${Utils.escapeHtml(it.description)}</p>` : ''}</div>`;
@@ -1440,7 +1447,7 @@
 
                 const headerBlock = `
                     <div style="margin-bottom:${16*density.scale}px">
-                        <h1 style="font-size:1.55em;font-weight:800;margin:0 0 2px;color:${style.accent.name ? style.color : '#14201C'}">${Utils.escapeHtml(data.personal.fullName || nameFallback)}</h1>
+                        <h1 style="font-size:1.55em;font-weight:800;margin:0 0 2px;color:${style.accent.name ? accentColor(style,'name') : '#14201C'}">${Utils.escapeHtml(data.personal.fullName || nameFallback)}</h1>
                         <div style="color:${style.color};font-weight:700;font-size:.95em;margin-bottom:8px">${Utils.escapeHtml(data.personal.title || titleFallback)}</div>
                         <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:.72em;color:#5B6B65">
                             ${data.personal.email ? `<span>${Utils.escapeHtml(data.personal.email)}</span>` : ''}
@@ -1463,7 +1470,7 @@
                     const mainKeys = order.filter(k => !sideKeys.includes(k));
                     return `<div dir="${dir}" style="display:flex;height:100%;box-sizing:border-box;${borderCss}font-family:${fontStack};font-size:${fs}px;line-height:${1.5*density.scale}">
                         <div style="width:34%;background:${sideBg};color:${sideText};padding:${24*density.scale}px 18px;box-sizing:border-box">
-                            <h1 style="font-size:1.25em;font-weight:800;margin:0 0 2px;${isCreative ? '' : `color:${style.accent.name ? style.color : '#14201C'}`}">${Utils.escapeHtml(data.personal.fullName || nameFallback)}</h1>
+                            <h1 style="font-size:1.25em;font-weight:800;margin:0 0 2px;${isCreative ? '' : `color:${style.accent.name ? accentColor(style,'name') : '#14201C'}`}">${Utils.escapeHtml(data.personal.fullName || nameFallback)}</h1>
                             <div style="font-size:.82em;font-weight:600;margin-bottom:14px;color:${isCreative?'rgba(255,255,255,.9)':style.color}">${Utils.escapeHtml(data.personal.title || titleFallback)}</div>
                             <div style="font-size:.72em;color:${sideMuted};margin-bottom:16px;display:flex;flex-direction:column;gap:4px">
                                 ${data.personal.email ? `<span>${Utils.escapeHtml(data.personal.email)}</span>` : ''}
@@ -1485,7 +1492,7 @@
 
                 if (tpl.family === 'executive') {
                     return `<div dir="${dir}" style="${wrapStyle}text-align:center">
-                        <h1 style="font-size:1.7em;font-weight:800;letter-spacing:.02em;margin:0 0 4px;color:${style.accent.name ? style.color : '#14201C'}">${Utils.escapeHtml(data.personal.fullName || nameFallback)}</h1>
+                        <h1 style="font-size:1.7em;font-weight:800;letter-spacing:.02em;margin:0 0 4px;color:${style.accent.name ? accentColor(style,'name') : '#14201C'}">${Utils.escapeHtml(data.personal.fullName || nameFallback)}</h1>
                         <div style="color:${style.color};font-weight:700;margin-bottom:10px">${Utils.escapeHtml(data.personal.title || titleFallback)}</div>
                         <div style="font-size:.72em;color:#5B6B65;margin-bottom:16px">${[data.personal.email,data.personal.phone,data.personal.location,data.personal.linkedin,data.personal.website,data.personal.nationality,data.personal.dob,data.personal.visa].filter(Boolean).map(Utils.escapeHtml).join('   •   ')}</div>
                         <div style="height:1px;background:${style.color};opacity:.4;margin-bottom:16px"></div>
@@ -1499,7 +1506,7 @@
                 if (tpl.family === 'developer') {
                     return `<div dir="${dir}" style="${wrapStyle}">
                         <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid ${style.color};padding-bottom:10px;margin-bottom:14px">
-                            <div><h1 style="font-size:1.4em;font-weight:800;margin:0;color:${style.accent.name ? style.color : '#14201C'}">${Utils.escapeHtml(data.personal.fullName || nameFallback)}</h1>
+                            <div><h1 style="font-size:1.4em;font-weight:800;margin:0;color:${style.accent.name ? accentColor(style,'name') : '#14201C'}">${Utils.escapeHtml(data.personal.fullName || nameFallback)}</h1>
                             <div style="font-family:'Fira Code',monospace;font-size:.75em;color:${style.color}">${Utils.escapeHtml(data.personal.title || titleFallback)}</div></div>
                             <div style="font-family:'Fira Code',monospace;font-size:.65em;color:#5B6B65;text-align:${dir === 'ltr' ? 'right' : 'left'}">${[data.personal.email,data.personal.phone,data.personal.location,data.personal.linkedin,data.personal.website].filter(Boolean).map(Utils.escapeHtml).join('<br>')}</div>
                         </div>
@@ -1523,6 +1530,10 @@
                 return TemplateRenderer.render(d, true);
             }
         };
+        // Per-element accent color: in "advanced" mode each target can have its own color.
+        function accentColor(style, target) {
+            return (style.colorMode === 'advanced' && style.colors && style.colors[target]) || style.color;
+        }
         function c_alpha(hex, a) {
             const n = parseInt(hex.replace('#',''), 16);
             return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
@@ -1720,12 +1731,22 @@
             playHeroAnimation: () => {
                 const chips = ['hc1','hc2','hc3','hc4','hc5','hc6'].map(id => document.getElementById(id)).filter(Boolean);
                 if (!chips.length) return;
-                const slots = [ {x:'8%',y:'20%'}, {x:'55%',y:'8%'}, {x:'60%',y:'20%'}, {x:'8%',y:'46%'}, {x:'10%',y:'70%'}, {x:'52%',y:'48%'} ];
-                const scatter = [ {x:'-10%',y:'80%',r:-8}, {x:'70%',y:'-8%',r:6}, {x:'85%',y:'55%',r:10}, {x:'-15%',y:'40%',r:-12}, {x:'30%',y:'95%',r:5}, {x:'80%',y:'85%',r:-6} ];
-                chips.forEach((c,i) => gsap.set(c, { left: scatter[i].x, top: scatter[i].y, rotate: scatter[i].r, opacity: 0 }));
+                const stage = chips[0].parentElement;
+                // Fractions of the stage (0..1). Every position is clamped so a chip can never
+                // leave the stage — the page never grows sideways while the chips move.
+                const slots   = [ [.06,.18], [.52,.06], [.56,.22], [.06,.46], [.08,.72], [.50,.52] ];
+                const scatter = [ [0,.85], [.75,0], [1,.60], [0,.40], [.30,1], [1,.90] ];
+                const rot     = [-8, 6, 10, -12, 5, -6];
+                const place = (c, f) => {
+                    const W = stage.clientWidth, H = stage.clientHeight;
+                    const x = Math.max(0, Math.min(W - c.offsetWidth,  f[0] * W));
+                    const y = Math.max(0, Math.min(H - c.offsetHeight, f[1] * H));
+                    return { left: x, top: y };
+                };
                 const tl = gsap.timeline({ repeat: -1, repeatDelay: 2.2 });
-                tl.to(chips, { opacity: 1, duration: .4, stagger: .08 })
-                  .to(chips, { left: (i)=>slots[i].x, top: (i)=>slots[i].y, rotate: 0, duration: 1.1, stagger: .1, ease: 'power3.out' }, '-=0.1')
+                tl.add(() => chips.forEach((c,i) => gsap.set(c, Object.assign(place(c, scatter[i]), { rotate: rot[i], opacity: 0 }))))
+                  .to(chips, { opacity: 1, duration: .4, stagger: .08 })
+                  .to(chips, { left: (i,c) => place(c, slots[i]).left, top: (i,c) => place(c, slots[i]).top, rotate: 0, duration: 1.1, stagger: .1, ease: 'power3.out' }, '-=0.1')
                   .to(chips, { opacity: 0, duration: .5, delay: 1.4, stagger: .05 });
             }
         };
@@ -2321,6 +2342,17 @@
                 document.getElementById('current-template-name').textContent = tpl.name + (tpl.premium ? ' (مميز)' : '');
                 document.getElementById('current-template-thumb').innerHTML = `<div style="width:800px;height:1131px;transform:scale(0.06);transform-origin:top right">${TemplateRenderer.render(r,true)}</div>`;
 
+                const mode = r.style.colorMode === 'advanced' ? 'advanced' : 'basic';
+                document.getElementById('color-mode-options').innerHTML = [['basic','أساسي'],['advanced','متقدم']].map(([id,l]) => `<button onclick="Builder.setColorMode('${id}')" class="py-1.5 rounded-lg text-xs font-bold transition ${mode===id ? 'bg-indigo-600 text-white' : 'surface'}">${l}</button>`).join('');
+                const advBox = document.getElementById('advanced-color-options');
+                advBox.classList.toggle('hidden', mode !== 'advanced');
+                if (mode === 'advanced') {
+                    advBox.innerHTML = [['name','الاسم'],['headings','عناوين الأقسام'],['dates','التواريخ'],['subtitle','العنوان الفرعي']].map(([t,l]) => {
+                        const cur = accentColor(r.style, t);
+                        const safe = /^#[0-9a-f]{6}$/i.test(cur) ? cur : '#189B78';
+                        return `<div class="flex items-center justify-between gap-2"><span class="text-xs">${l}</span><span class="flex items-center gap-2"><input type="color" value="${safe}" onchange="Builder.setAccentColor('${t}', this.value)" class="w-8 h-8 rounded-md cursor-pointer border-0 p-0 bg-transparent" aria-label="لون ${l}"><span class="text-[10px] font-mono" dir="ltr" style="color:var(--text-muted)">${safe}</span></span></div>`;
+                    }).join('') + `<button onclick="Builder.resetAccentColors()" class="text-[11px] font-bold underline" style="color:var(--text-muted)">إعادة الكل للون الأساسي</button>`;
+                }
                 const isPreset = COLORS.some(c => c.hex.toLowerCase() === (r.style.color || '').toLowerCase());
                 document.getElementById('color-swatches-primary').innerHTML = COLOR_GROUPS.map(g => `
                     <div>
@@ -2393,6 +2425,23 @@
                 if (key === 'template') r.template = value;
                 Builder.renderPreview(); Builder.renderDesignTab();
                 
+            },
+            setColorMode: (mode) => {
+                const r = STATE.currentResume; r.style.colorMode = mode;
+                r.style.colors = r.style.colors || {};
+                Builder.renderPreview(); Builder.renderDesignTab();
+            },
+            setAccentColor: (target, value) => {
+                const r = STATE.currentResume; r.style.colors = Object.assign({}, r.style.colors || {}, { [target]: value });
+                r.style.colorMode = 'advanced';
+                // Make sure the target is actually colored, otherwise the pick would have no visible effect.
+                r.style.accent = Object.assign({ name: true, headings: true, dates: false, subtitle: false }, r.style.accent || {});
+                r.style.accent[target] = true;
+                Builder.renderPreview(); Builder.renderDesignTab();
+            },
+            resetAccentColors: () => {
+                const r = STATE.currentResume; r.style.colors = {};
+                Builder.renderPreview(); Builder.renderDesignTab();
             },
             toggleAccent: (target, checked) => {
                 const r = STATE.currentResume;
