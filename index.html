@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#FFFFFF">
     <meta name="color-scheme" content="light dark">
-    <meta name="google-site-verification" content="IH_dYUXH_BQW7TR7uUDlCoLQvJy0kQdNy503aXl8W8w" />
     <script>
         /* Apply the saved / system theme before first paint so the splash and page never flash the wrong colours. */
         (function () {
@@ -852,11 +851,11 @@
                     <button onclick="Builder.saveResume()" class="flex-1 py-2.5 surface hover:bg-black/5 dark:hover:bg-white/10 rounded-lg font-medium transition flex items-center justify-center gap-2 text-sm">
                         <i class="ph ph-floppy-disk"></i> <span data-i18n="save">حفظ</span>
                     </button>
+                    <button onclick="UI.toggleMobilePreview()" class="md:hidden flex-1 py-2.5 rounded-lg font-bold transition flex items-center justify-center gap-2 text-sm border border-indigo-500 text-indigo-600" style="background:var(--card-bg)" aria-label="معاينة السيرة الذاتية">
+                        <i class="ph ph-eye text-base"></i> <span data-i18n="previewShort">معاينة</span>
+                    </button>
                     <button onclick="Builder.exportPDF()" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition flex items-center justify-center gap-2 text-sm">
                         <i class="ph ph-download-simple"></i> <span data-i18n="download">تحميل PDF</span>
-                    </button>
-                    <button onclick="Builder.sharePDF()" class="flex-1 py-2.5 surface hover:bg-black/5 dark:hover:bg-white/10 rounded-lg font-medium transition flex items-center justify-center gap-2 text-sm">
-                        <i class="ph ph-share-network"></i> <span data-i18n="sharePdf">مشاركة PDF</span>
                     </button>
                 </div>
             </div>
@@ -869,25 +868,17 @@
                     <button onclick="UI.navigate('templates')" class="text-sm hover:text-indigo-500 flex items-center gap-1 transition" id="preview-template-label" data-i18n="template">القالب</button>
                     <div class="w-px h-4" style="background:var(--border-color)"></div>
                     <button onclick="Builder.shareResume()" class="text-sm hover:text-indigo-500 flex items-center gap-1 transition"><i class="ph ph-share-network"></i> <span data-i18n="share">مشاركة</span></button>
-                    <div class="w-px h-4" style="background:var(--border-color)"></div>
-                    <button onclick="Builder.sharePDF()" class="text-sm hover:text-indigo-500 flex items-center gap-1 transition"><i class="ph ph-file-pdf"></i> <span data-i18n="sharePdf">مشاركة PDF</span></button>
                 </div>
 
                 <div id="preview-fit" class="a4-fit"><div id="preview-container" class="a4-container" role="img" aria-label="معاينة السيرة الذاتية"></div></div>
                 <div class="h-20 shrink-0"></div>
             </div>
 
-            <!-- Mobile: a single floating action reveals the live preview. Switching between
-                 data / design / evaluate already works on mobile via the tab strip above the
-                 form (same element used on desktop) — a second, duplicate bottom nav for the
-                 same three tabs was confusing and it also collided with the save/download bar,
-                 so it has been replaced with this one unambiguous action. -->
-            <button onclick="UI.toggleMobilePreview()" class="md:hidden fixed z-40 rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 flex items-center gap-2 px-5 py-3 font-bold text-sm" style="bottom:calc(4.75rem + var(--safe-bottom));left:50%;transform:translateX(-50%)">
-                <i class="ph ph-eye text-lg"></i> معاينة السيرة الذاتية
-            </button>
+            <!-- Mobile: the live-preview action now lives inside the bottom action bar
+                 (save | preview | download) so nothing floats over the form content. -->
 
             <div id="mobile-preview-panel" class="fixed inset-0 z-[60] flex-col overflow-y-auto pb-10 px-4 items-center hidden" style="background:var(--bg-color);padding-top:calc(1rem + var(--safe-top));padding-bottom:calc(2.5rem + var(--safe-bottom))">
-                <button onclick="UI.toggleMobilePreview()" class="mb-4 px-4 py-2 rounded-full surface font-bold text-sm flex items-center gap-2"><i class="ph ph-x"></i> إغلاق المعاينة</button>
+                <button onclick="UI.toggleMobilePreview()" class="sticky z-10 mb-4 px-4 py-2 rounded-full surface font-bold text-sm flex items-center gap-2 shadow-md" style="top:.25rem;background:var(--card-bg)"><i class="ph ph-x"></i> إغلاق المعاينة</button>
                 <div id="mobile-preview-fit" class="a4-fit"><div id="mobile-preview-container" class="a4-container"></div></div>
             </div>
 
@@ -1217,7 +1208,7 @@
             appId: "1:830828499665:web:9acf5484bd94a0d1afebf0"
         };
         // Public https address of the website (used to build share links from inside the Android app).
-        const PUBLIC_SITE_URL = 'https://ai-resum-pro.vercel.app';
+        const PUBLIC_SITE_URL = '';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : FIREBASE_WEB_CONFIG;
 
         let _app, _db, _auth;
@@ -1491,7 +1482,7 @@
                 sumReferences: "أضف مراجعك من المديرين أو زملاء العمل مع بيانات التواصل.",
                 sumDeclaration: "أضف إقرارًا رسميًا أو وقّعه شخصيًا.",
                 sumCustom: "أضف قسمًا مخصصًا لأي محتوى آخر، أو ادمج أقسامًا بطريقتك.",
-                save: "حفظ", download: "تحميل PDF", sharePdf: "مشاركة PDF", template: "القالب", generateAI: "اقتراح ملخص", improveAI: "تحسين الصياغة",
+                save: "حفظ", previewShort: "معاينة", download: "تحميل PDF", template: "القالب", generateAI: "اقتراح ملخص", improveAI: "تحسين الصياغة",
                 company: "جهة العمل", role: "المسمى الوظيفي", startDate: "تاريخ البدء", endDate: "تاريخ الانتهاء", current: "حتى الآن", description: "الوصف",
                 photoOptional: "صورة شخصية (اختيارية)", photoAtsNote: "هذا القالب لا يعرض صورة — للحفاظ على أعلى توافق مع أنظمة التوظيف.",
             },
@@ -1593,7 +1584,7 @@
                 sumReferences: "Add your references from managers or coworkers, including their contact details.",
                 sumDeclaration: "Add your declaration by creating or uploading your personal signature.",
                 sumCustom: "Add a custom section for anything else, or combine sections cleanly.",
-                save: "Save", download: "Download PDF", sharePdf: "Share PDF", template: "Template", generateAI: "Suggest summary", improveAI: "Improve wording",
+                save: "Save", previewShort: "Preview", download: "Download PDF", template: "Template", generateAI: "Suggest summary", improveAI: "Improve wording",
                 company: "Company", role: "Role", startDate: "Start date", endDate: "End date", current: "Present", description: "Description",
                 photoOptional: "Profile photo (optional)", photoAtsNote: "This template omits a photo to maximize ATS compatibility.",
             }
@@ -1619,33 +1610,17 @@
                 if (obj && typeof obj === 'object') delete obj.__proto__;
                 return obj;
             },
-            // Browser: normal download. Android app (Capacitor): save into the public
-            // Downloads/Seerti folder via the native Downloader plugin, so the file shows
-            // up in the phone's Files app like any other download. Falls back to the
-            // in-app cache + share sheet if the native plugin isn't available for some reason.
+            // Browser: normal download. Android app (Capacitor): save to cache and open the share sheet.
             deliverPdf: (worker, name) => {
-                const cap = window.Capacitor;
-                const native = !!(cap && cap.isNativePlatform && cap.isNativePlatform());
-                const D = native && cap.Plugins && cap.Plugins.Downloader;
-                if (!native) return worker.save();
-                const safe = String(name).replace(/[\\/:*?"<>|]+/g, '_');
-                if (D) {
-                    return worker.outputPdf('datauristring').then((uri) => D.savePdf({ data: uri, filename: safe }));
-                }
-                return Utils.sharePdfFile(worker, name);
-            },
-            // Shares a generated PDF through the system share sheet (WhatsApp, Drive, Bluetooth, …).
-            // On web there is no share sheet for a locally-generated file, so it falls back to a normal download.
-            sharePdfFile: (worker, name) => {
                 const cap = window.Capacitor;
                 const native = !!(cap && cap.isNativePlatform && cap.isNativePlatform());
                 const FS = native && cap.Plugins && cap.Plugins.Filesystem;
                 const SH = native && cap.Plugins && cap.Plugins.Share;
-                if (!native || !FS || !SH) return worker.save();
+                if (!native || !FS) return worker.save();
                 const safe = String(name).replace(/[\\/:*?"<>|]+/g, '_');
                 return worker.outputPdf('datauristring').then(async (uri) => {
                     const saved = await FS.writeFile({ path: safe, data: uri.split(',')[1], directory: 'CACHE' });
-                    await SH.share({ title: safe, url: saved.uri, dialogTitle: 'مشاركة الملف' });
+                    if (SH) await SH.share({ title: safe, url: saved.uri, dialogTitle: 'حفظ أو مشاركة الملف' });
                 });
             },
             debounce: (func, wait) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => func(...a), wait); }; },
@@ -2035,7 +2010,7 @@
                     b.style.borderColor = on ? '#189B78' : 'transparent';
                     b.style.color = on ? '#189B78' : 'var(--text-muted)';
                 });
-                if (tab === 'evaluate') Evaluator.run();
+                if (tab === 'evaluate') Evaluator.run()
                 if (tab === 'design') Builder.renderDesignTab();
             },
 
@@ -2941,12 +2916,9 @@
                 UI.showToast(success ? 'تم حفظ السيرة الذاتية' : 'تعذّر الحفظ، حاول مجددًا', success ? 'success' : 'error');
             },
 
-            // Builds the off-screen A4 element used to render the resume to PDF, and the
-            // matching html2pdf worker. Shared by exportPDF (download) and sharePDF (share sheet)
-            // so both stay in sync instead of duplicating the render setup.
-            _buildPdfJob: () => {
+            exportPDF: () => {
                 const __r = STATE.currentResume;
-                if (!__r) return null;
+                if (!__r) return;
                 const __pages = Builder.measurePages(__r);
                 const __stage = document.createElement('div');
                 __stage.style.cssText = 'position:fixed;top:0;left:-12000px;width:800px;pointer-events:none;';
@@ -2956,11 +2928,8 @@
                 __stage.appendChild(element);
                 document.body.appendChild(__stage);
                 element._stage = __stage;
-                if (!window.html2pdf) {
-                    __stage.remove();
-                    (window.Net && !Net.online() ? Net.show('تصدير ملف PDF') : UI.showToast('تعذّر تجهيز الملف الآن', 'error'));
-                    return null;
-                }
+                if (!window.html2pdf) { __stage.remove(); return (window.Net && !Net.online() ? Net.show('تصدير ملف PDF') : UI.showToast('تعذّر تجهيز الملف الآن', 'error')); }
+                UI.showToast('جارٍ تجهيز ملف PDF…', 'info');
                 const originalTransform = element.style.transform;
                 element.style.transform = 'none';
 
@@ -2974,47 +2943,21 @@
                     element.appendChild(watermark);
                 }
 
-                const fname = `${(__r.title || 'resume').replace(/\s+/g,'_')}.pdf`;
-                const worker = html2pdf().set({
-                    margin: 0, filename: fname,
+                const __fname = `${(STATE.currentResume.title || 'resume').replace(/\s+/g,'_')}.pdf`;
+                Utils.deliverPdf(html2pdf().set({
+                    margin: 0, filename: __fname,
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: { scale: (window.innerWidth < 768 ? 1.5 : 2), useCORS: true, backgroundColor: '#ffffff' },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
                     pagebreak: { mode: ['css', 'legacy'] }
-                }).from(element);
-                const cleanup = () => {
-                    element.style.transform = originalTransform;
-                    if (element._stage) element._stage.remove();
+                }).from(element), __fname).then(() => {
+                    element.style.transform = originalTransform; if (element._stage) element._stage.remove();
                     if (watermark) watermark.remove();
-                };
-                return { worker, fname, cleanup };
-            },
-
-            exportPDF: () => {
-                const job = Builder._buildPdfJob();
-                if (!job) return;
-                UI.showToast('جارٍ تجهيز ملف PDF…', 'info');
-                Utils.deliverPdf(job.worker, job.fname).then(() => {
-                    job.cleanup();
                     UI.showToast('تم تنزيل الملف بنجاح', 'success');
                 }).catch(() => {
-                    job.cleanup();
+                    element.style.transform = originalTransform; if (element._stage) element._stage.remove();
+                    if (watermark) watermark.remove();
                     UI.showToast('حدث خطأ أثناء التصدير', 'error');
-                });
-            },
-
-            sharePDF: () => {
-                const job = Builder._buildPdfJob();
-                if (!job) return;
-                const cap = window.Capacitor;
-                const native = !!(cap && cap.isNativePlatform && cap.isNativePlatform());
-                if (!native) { job.cleanup(); return UI.showToast('المشاركة كملف متاحة من تطبيق الجوال. على الويب استخدم زر تحميل PDF ثم شاركه.', 'info'); }
-                UI.showToast('جارٍ تجهيز ملف PDF…', 'info');
-                Utils.sharePdfFile(job.worker, job.fname).then(() => {
-                    job.cleanup();
-                }).catch(() => {
-                    job.cleanup();
-                    UI.showToast('تعذّرت المشاركة', 'error');
                 });
             },
 
