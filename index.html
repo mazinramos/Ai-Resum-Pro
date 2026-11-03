@@ -45,6 +45,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Almarai:wght@400;700;800&family=Noto+Kufi+Arabic:wght@400;600;700&family=Noto+Naskh+Arabic:wght@400;600;700&family=Noto+Sans+Arabic:wght@400;600;700&family=Amiri:wght@400;700&family=Readex+Pro:wght@400;500;600;700&family=El+Messiri:wght@400;600;700&family=Changa:wght@400;600;700&family=Mada:wght@400;600;700&family=Vazirmatn:wght@400;600;700&family=Lateef:wght@400;700&family=Scheherazade+New:wght@400;700&family=Markazi+Text:wght@400;600;700&family=Reem+Kufi:wght@400;600;700&family=Rubik:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=Montserrat:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Nunito:wght@400;600;700&family=Source+Sans+3:wght@400;600;700&family=Work+Sans:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=Manrope:wght@400;500;600;700&family=Mulish:wght@400;600;700&family=Raleway:wght@400;500;600;700&family=Fira+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700&family=Merriweather:wght@400;700&family=Lora:wght@400;600;700&family=Playfair+Display:wght@600;700&family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600;700&family=Libre+Baskerville:wght@400;700&family=EB+Garamond:wght@400;500;700&family=Cormorant+Garamond:wght@400;600;700&family=Roboto+Slab:wght@400;500;700&family=Noto+Serif:wght@400;700&family=Alegreya:wght@400;500;700&family=Source+Serif+4:wght@400;600;700&family=Fira+Code:wght@400;500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
     <!-- Icons -->
+    <!-- Icon font: CDN copy first (safety net if /vendor is missing), local copy after (used first when it loads, works offline) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
     <link rel="stylesheet" href="vendor/phosphor/regular/style.css">
     <link rel="stylesheet" href="vendor/phosphor/bold/style.css">
     <link rel="stylesheet" href="vendor/phosphor/fill/style.css">
@@ -376,8 +380,8 @@
             </div>
 
             <div class="flex items-center gap-0.5 sm:gap-1.5 shrink-0">
-                <button id="menu-btn" aria-expanded="false" aria-controls="mobile-nav-menu" onclick="UI.toggleMobileMenu()" class="icon-btn md:hidden p-2" title="القائمة" aria-label="فتح القائمة">
-                    <i class="ph ph-list text-xl"></i>
+                <button id="menu-btn" aria-expanded="false" aria-controls="mobile-nav-menu" onclick="UI.toggleMobileMenu()" class="icon-btn md:hidden p-2" style="color:var(--text-color)" title="القائمة" aria-label="فتح القائمة">
+                    <span id="menu-icon" class="inline-flex" aria-hidden="true"><svg id="mi-list" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg><svg id="mi-x" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M18 6 6 18M6 6l12 12"/></svg></span>
                 </button>
                 <button onclick="UI.toggleTheme()" class="icon-btn p-2" style="border:1px solid var(--border-color);border-radius:9999px;color:var(--text-color)" title="الوضع الداكن" aria-label="الوضع الداكن">
                     <span id="theme-icon" class="inline-flex" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></span>
@@ -2002,8 +2006,8 @@
                 const btn = document.getElementById('menu-btn');
                 if (btn) {
                     btn.setAttribute('aria-expanded', String(!shouldHide));
-                    const ic = btn.querySelector('i');
-                    if (ic) ic.className = shouldHide ? 'ph ph-list text-xl' : 'ph ph-x text-xl';
+                    const iList = document.getElementById('mi-list'), iX = document.getElementById('mi-x');
+                    if (iList && iX) { iList.style.display = shouldHide ? '' : 'none'; iX.style.display = shouldHide ? 'none' : ''; }
                 }
                 if (window._navSync) window._navSync();
             },
